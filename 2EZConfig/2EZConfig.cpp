@@ -798,20 +798,28 @@ void HelpMarker(const char* desc)
     }
 }
 
+
+//Should probably make this just iterate through each exe present in directory and look for a match,
+//using name is stupid incase someone changes the name of original exe to something else.
+
 int detectGameVersion() {
     unsigned char result[MD5_DIGEST_LENGTH];
     const char* filename;
 
 
+
     if (fileExists("EZ2DJ.exe")) {
+        filename = "EZ2DJ.exe";
+    }
+    else if (fileExists("EZ2DJBe.exe")) {
         filename = "EZ2DJ.exe";
     }
     else if (fileExists("EZ2AC.exe")) {
         filename = "EZ2AC.exe";
     }
-    else if (fileExists("EZ2Dancer.exe")) {
+    /*else if (fileExists("EZ2Dancer.exe")) {
         filename = "EZ2Dancer.exe";
-    }
+    }*/
     else {
         //Cant find any EXE. set to n-1
         return IM_ARRAYSIZE(djGames) - 2;
