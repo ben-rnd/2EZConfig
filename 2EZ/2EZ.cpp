@@ -268,6 +268,13 @@ DWORD PatchThread() {
     if (strcmp(currGame.name, "Final") == 0 && GetPrivateProfileIntA("Settings", "KeepSettings", 0, config)) {
             FnKeepSettings(baseAddress);
     }
+
+
+    //re-enable keyboard if playing FNEX
+    if (strcmp(currGame.name, "Final:EX") == 0) {
+        zeroMemory(baseAddress, 0x15D51);
+    }
+
     
 
     return NULL;
