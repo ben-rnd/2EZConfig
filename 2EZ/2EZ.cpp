@@ -178,6 +178,10 @@ DWORD PatchThread() {
 
     //Get Game config file
     LPCSTR config = ".\\2EZ.ini";
+    HANDLE ez2Proc = GetCurrentProcess();
+    uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(NULL);
+    int GameVer = GetPrivateProfileIntA("Settings", "GameVer", 0, config);
+    djGame currGame = djGames[GameVer];
 
     //Get Button Bindings config file
     char ControliniPath[MAX_PATH];
@@ -233,18 +237,20 @@ DWORD PatchThread() {
     }
     
     ///PATCHING SECTION
-    
+
+
     //Some of the games (ie final) take a while to initialise and will crash or clear out the bindings unless delayed
     //Doesnt cause any issues so i just set this globally on all games, can be overidden in .ini if needed.
     //since we're already hooking IO theres no problem doing this.
     Sleep(GetPrivateProfileIntA("Settings", "BindDelay", 2000, config));
 
-    HANDLE ez2Proc = GetCurrentProcess();
-    uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(NULL);
-    int GameVer = GetPrivateProfileIntA("Settings", "GameVer", 0, config);
-    djGame currGame = djGames[GameVer];
-
-
+    if (strcmp(currGame.name, "Evolve") == 0) {
+        NOPMemory(baseAddress, 0x11757);
+        NOPMemory(baseAddress, 0x11758);
+        NOPMemory(baseAddress, 0x11759);
+        NOPMemory(baseAddress, 0x11770);
+        NOPMemory(baseAddress, 0x11771);
+    }
     //Sometimes GetModuleHandleA wasnt working?
     //set to the known base address offset
     //This has never not worked but I dont want to rely on it
@@ -268,6 +274,7 @@ DWORD PatchThread() {
     if (strcmp(currGame.name, "Final") == 0 && GetPrivateProfileIntA("Settings", "KeepSettings", 0, config)) {
             FnKeepSettings(baseAddress);
     }
+
 
 
     //re-enable keyboard if playing FNEX
