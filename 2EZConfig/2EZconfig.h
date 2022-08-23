@@ -9,6 +9,8 @@ namespace EZConfig {
     int RenderUI(GLFWwindow* window);
     int sixthBackgroundLoop(char * launcherName);
 
+    const LPCSTR ConfigIniPath = ".\\2EZ.ini";
+
     static struct djGame {
         const char* name;
         const char* defaultExeName;
@@ -112,8 +114,6 @@ namespace EZConfig {
                                     "Red Lamp R", 
                                     "Blue Lamp L", 
                                     "Blue Lamp R" };
-
-    const LPCSTR ConfigIniPath = ".\\2EZ.ini";
     
     
     //FINAL SHIT
