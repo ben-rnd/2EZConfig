@@ -10,6 +10,11 @@ namespace EZConfig {
     int sixthBackgroundLoop(char * launcherName);
 
     const LPCSTR ConfigIniPath = ".\\2EZ.ini";
+    
+    enum gameType {
+        DJ,
+        DANCER
+    };
 
     static struct djGame {
         const char* name;
@@ -45,16 +50,6 @@ namespace EZConfig {
         {"Final:EX", "EZ2AC.exe", {'\xbc','\xe8','\x48','\xf2','\xd7','\x94','\x5c','\x36','\x12','\x0a','\x2a','\xda','\xa5','\x73','\x57','\x48'}, true, true, true, false},
     };
 
-    static struct dancerGame {
-        const char* name;
-        unsigned char md5[MD5_DIGEST_LENGTH];
-    } dancerGames[] = {
-        {"1st Move", ""}, //no dump
-        {"2nd Move", ""}, 
-        {"UK Move", ""}, //no dump
-        {"UK Move SE", ""},
-        {"Super China", ""},
-    };
     //EZ2 INPUT/OUTPUT NAMES
     //i cant remember why i have 2 of these?
     static const char* devButtons[] = { "dQuit", "dTest", "dService", "dCoin","dP1 Start", "dP2 Start", "dEffector 1",
@@ -114,7 +109,6 @@ namespace EZConfig {
                                     "Red Lamp R", 
                                     "Blue Lamp L", 
                                     "Blue Lamp R" };
-    
     
     //FINAL SHIT
     static const char* noteSkins[] = { "Default", "2nd", "1st SE", "Simple", "Steel","3S","3S RB","Circle", "Disc", "Star", "Turtle", "Gem" };

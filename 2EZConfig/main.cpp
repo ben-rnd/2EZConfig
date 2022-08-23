@@ -16,9 +16,10 @@
 #endif
 
 void setTheme();
+void setDancerTheme();
 
 
-static bool debug = false;
+static bool debug = true;
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -77,6 +78,7 @@ int main(int argc, char* argv[])
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     setTheme();
+    //setDancerTheme();
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -123,6 +125,64 @@ int main(int argc, char* argv[])
     glfwTerminate();
 
     return 0;
+}
+
+
+void setDancerTheme()
+{
+
+    ImVec4 white = ImVec4(1.00, 1.00, 1.00, 1.00);
+    ImVec4 transparent = ImVec4(0.00, 0.00, 0.00, 0.00);
+    ImVec4 dark = ImVec4(0.00, 0.00, 0.00, 0.20);
+    ImVec4 darker = ImVec4(0.00, 0.00, 0.00, 0.10);
+    ImVec4 grab = ImVec4(0.00, 0.00, 0.00, 0.30);
+
+    ImVec4 background = ImVec4(0.95, 0.95, 0.95, 1.00);
+    ImVec4 text = ImVec4(0.10, 0.10, 0.10, 1.00);
+    ImVec4 border = ImVec4(0.64, 0.60, 0.60, 1.00);
+    ImVec4 header = ImVec4(0.95, 0.60, 0.74, 1.0);
+    ImVec4 hover = ImVec4(0.90, 0.55, 0.70, 1.0);
+    ImVec4 active = ImVec4(0.90, 0.50, 0.67, 1.00);
+
+    ImVec4* colors = ImGui::GetStyle().Colors;
+
+    colors[ImGuiCol_Text] = text;
+    colors[ImGuiCol_WindowBg] = white;
+    colors[ImGuiCol_ChildBg] = background;
+    colors[ImGuiCol_PopupBg] = white;
+
+    colors[ImGuiCol_Border] = border;
+    colors[ImGuiCol_BorderShadow] = transparent;
+
+    colors[ImGuiCol_Button] = header;
+    colors[ImGuiCol_ButtonHovered] = hover;
+    colors[ImGuiCol_ButtonActive] = active;
+
+    colors[ImGuiCol_FrameBg] = white;
+    colors[ImGuiCol_FrameBgHovered] = hover;
+    colors[ImGuiCol_FrameBgActive] = active;
+
+    colors[ImGuiCol_MenuBarBg] = header;
+    colors[ImGuiCol_Header] = header;
+    colors[ImGuiCol_HeaderHovered] = hover;
+    colors[ImGuiCol_HeaderActive] = active;
+
+    colors[ImGuiCol_CheckMark] = text;
+    colors[ImGuiCol_SliderGrab] = grab;
+    colors[ImGuiCol_SliderGrabActive] = darker;
+
+    colors[ImGuiCol_ScrollbarBg] = header;
+    colors[ImGuiCol_ScrollbarGrab] = grab;
+    colors[ImGuiCol_ScrollbarGrabHovered] = dark;
+    colors[ImGuiCol_ScrollbarGrabActive] = darker;
+
+    colors[ImGuiCol_Tab] = header;
+    colors[ImGuiCol_TabHovered] = hover;
+    colors[ImGuiCol_TabActive] = active;
+
+    colors[ImGuiCol_TitleBg] = header;
+    colors[ImGuiCol_TitleBgActive] = header;
+
 }
 
 

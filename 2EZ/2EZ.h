@@ -12,6 +12,24 @@
 
 DWORD byteArray[8] = { 0b01111111, 0b10111111, 0b11011111,0b11101111,0b11110111,0b11111011,0b11111101, 0b11111110 };
 
+//ez2dancer panels have 4 sensors each, and rather than the IO reading each of these individually and determining a press
+//the game receives all 4 states and determines it itself. For Accuracy sake, i think all sensors should be mappable
+//But for now will just combine the inputs.
+//DWORD byteArrayDancer[12] = {0b011111111111, 0b101111111111, 0b110111111111, 0b111011111111
+//							   0b111101111111, 0b111110111111, 0b111111011111, 0b111111101111
+//							   0b111111110111, 0b111111111011, 0b111111111101, 0b111111111110};
+
+DWORD byteArrayDancer[4] = {0b000011111111, 
+							0b111100001111, 
+							0b111111110000,
+							0b1111111111111111};
+
+DWORD byteArrayDancerService[12] = {0b1111011111111111, 0b1111101111111111, 0b1101111111111111,0b1110111111111111, 
+									0b1111110111111111, 0b1111111011111111, 0b0111111111111111, 0b1011111111111111,  
+									0b00000001111011111, 0b0000000011101111, 0b0000000011111011, 0b0000000011111111, };
+
+
+
 typedef struct IOBinding {
 	bool bound = false;
 	int method = 3; // 0 = kb 1= joypad

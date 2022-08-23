@@ -12,6 +12,7 @@ using namespace std;
 ioBinding buttonBindings[NUM_OF_IO];
 ioAnalogs analogBindings[NUM_OF_ANALOG];
 Joysticks joysticks[NUM_OF_JOYSTICKS];
+static UINT handState = 0x0000;
 
 UINT8 getButtonInput(int ionRangeStart) {
     UINT8 output = 255;
@@ -43,6 +44,63 @@ UINT8 getAnalogInput(int player) {
 }
 
 
+//EZ2Dancer inputs
+UINT getFootInput(int ionRangeStart) {
+    UINT output = 0x0FFF;
+    int count = 0;
+    for (int i = ionRangeStart; i < ionRangeStart + 4; i++) {
+        if (buttonBindings[i].bound) {
+            if (buttonBindings[i].method) {
+                if (input::isJoyButtonPressed(buttonBindings[i].joyID, buttonBindings[i].binding)) {
+                //    if (!buttonBindings[i].pressed) {
+                //         buttonBindings[i].pressed = true;
+                        output = output & byteArrayDancer[count];
+                //    }
+                //}
+                //else if (buttonBindings[i].pressed) {
+                //    buttonBindings[i].pressed = false;
+                }
+            }
+            else {
+                if (input::isKbButtonPressed(buttonBindings[i].binding)) {
+                //    if (!buttonBindings[i].pressed) {
+                //       buttonBindings[i].pressed = true;
+                        output = output & byteArrayDancer[count];
+                //    }
+                //} else if (buttonBindings[i].pressed) {
+                //    buttonBindings[i].pressed = false;
+                }
+            }
+        }
+        count++;
+    }
+    return ~output;
+}
+
+UINT getHandsSensors(int ionRangeStart) {
+    UINT output = 0xFFFF;
+    handState = 0x0000;
+    int count = 0;
+    for (int i = ionRangeStart; i < ionRangeStart + 8; i++) {
+        if (buttonBindings[i].bound) {
+            if (buttonBindings[i].method) {
+                if (input::isJoyButtonPressed(buttonBindings[i].joyID, buttonBindings[i].binding)) {
+                    output = output & byteArrayDancerService[count];
+                    
+                }
+            }
+            else {
+                if (input::isKbButtonPressed(buttonBindings[i].binding)) {
+                    output = output & byteArrayDancerService[count];
+                }
+            }
+        }
+        count++;
+    }
+    //handState = ~output;
+    return ~output;
+}
+
 //Debugging anything in here is a bitch as attaching a debugger 
 //often crashes the game when using the io shim.
 LONG WINAPI IOportHandler(PEXCEPTION_POINTERS pExceptionInfo) {
@@ -61,7 +119,7 @@ LONG WINAPI IOportHandler(PEXCEPTION_POINTERS pExceptionInfo) {
     
     // Each port has 8 buttons assigned to it. 
     // each port reports a 8bit value, 0 = pressed, 1 = not pressed
-
+    //Input byte from I / O port in DX into AL
     //EZ2DJ Io Input - Missing coin input, no clue what QE are?
     // HANDLE IN AL, DX
     if ((eip_val & 0xFF) == 0xEC) {
@@ -115,38 +173,31 @@ LONG WINAPI IOportHandler(PEXCEPTION_POINTERS pExceptionInfo) {
     
     // Game input
     // -- Handle IN AX,DX --
-
+    //IN AX, DX	Input word from I/O port in DX into AX
     //testing indicates this is somewhat the right range just need to verify further
     //its a PIA so low prio
+    //values in brackets are the temporary bindings used in the config tool 
     if ((eip_val & 0xFFFF) == 0xED66) {
         DWORD VAL = pExceptionInfo->ContextRecord->Edx & 0xFFFF;
         switch (pExceptionInfo->ContextRecord->Edx & 0xFFFF) {
-        case 0x300://No clue what this maps to
-            /*pExceptionInfo->ContextRecord->Eax = do something
-            break;*/
-        case 0x302://No clue what this maps to
-            /*pExceptionInfo->ContextRecord->Eax = do something
-            break;*/
-        case 0x304://No clue what this maps to
-            /*pExceptionInfo->ContextRecord->Eax = do something
-            break;*/
-        case 0x306://No clue what this maps to
-            /*pExceptionInfo->ContextRecord->Eax = do something
-            break;*/
+        case 0x300: //Feet -> 1P-RIGHT(TEST)(4bits), 1P-BACK(SVC)(4bits), 1P-LEFT(E4)(4bits), Credit count? - how weird
+            pExceptionInfo->ContextRecord->Eax = getFootInput(0);
+            break;
+        case 0x302: //Feet -> 2P-RIGHT(E2)(4bits) 2P-BACK(E1)(4bits)  2P-RIGHT(P2)(4bits) BLANK(P1)
+            pExceptionInfo->ContextRecord->Eax = getFootInput(4);
+            break;
+        case 0x304: //Hands 
+            pExceptionInfo->ContextRecord->Eax = 0;
+            break;
+        case 0x306: //HANDS AND Service TESTING INPUTS B4 B3 B2 B1
+            pExceptionInfo->ContextRecord->Eax = getHandsSensors(12);
+            break;
         case 0x308://No clue what this maps to
             /*pExceptionInfo->ContextRecord->Eax = do something
             break;*/
-        case 0x310://No clue what this maps to
-            /*pExceptionInfo->ContextRecord->Eax = do something
-            break;*/
-        case 0x312://No clue what this maps to
-            /*pExceptionInfo->ContextRecord->Eax = do something
-            break;*/
-        case 0x314://No clue what this maps to
-            /*pExceptionInfo->ContextRecord->Eax = do something
-            break;*/
+
         default:
-            pExceptionInfo->ContextRecord->Eax = 0;
+            pExceptionInfo->ContextRecord->Eax = 0xFFFF;
             break;
         }
         // Skip over the instruction that caused the exception:
