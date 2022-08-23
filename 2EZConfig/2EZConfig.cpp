@@ -799,22 +799,20 @@ void HelpMarker(const char* desc)
 }
 
 
-//Should probably make this just iterate through each exe present in directory and look for a match,
-//using name is stupid incase someone changes the name of original exe to something else.
-
 int detectGameVersion() {
-    unsigned char result[MD5_DIGEST_LENGTH];
-    const char* filename = "";
-
     TCHAR fullPath[MAX_PATH];
     TCHAR driveLetter[3];
     TCHAR directory[MAX_PATH];
     TCHAR FinalPath[MAX_PATH];
+    DIR* dir;
+    struct dirent* ent;
+    unsigned char result[MD5_DIGEST_LENGTH];
+
+    //get current directory
     GetModuleFileName(NULL, fullPath, MAX_PATH);
     _splitpath(fullPath, driveLetter, directory, NULL, NULL);
     sprintf(FinalPath, "%s%s", driveLetter, directory);
-    DIR* dir;
-    struct dirent* ent;
+
 
     if ((dir = opendir(FinalPath)) != NULL) {
         /* print all the files and directories within directory */
@@ -834,7 +832,6 @@ int detectGameVersion() {
 
             //cannot open file, continute to next.
             if (inFile == NULL) {
-                //Something Broke, Set to  n-1
                 continue;
             }
 
@@ -857,13 +854,8 @@ int detectGameVersion() {
         }
         closedir(dir);
     }
-    else {
-        /* could not open directory */
-        perror("");
-        return IM_ARRAYSIZE(djGames) - 2;;
-    }
 
-    //shouldve returned already but if nothing found set to n-1
+    // could not open directory set to n-1
     return IM_ARRAYSIZE(djGames) - 2;
 }
 
