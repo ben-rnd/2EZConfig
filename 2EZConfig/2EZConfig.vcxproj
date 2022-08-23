@@ -86,7 +86,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(SolutionDir)2EZExternals\openssl\include;$(SolutionDir)2EZExternals\glfw\include;$(SolutionDir)2EZExternals\imgui\backends;$(SolutionDir)2EZExternals\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)2EZExternals\openssl\include;$(SolutionDir)2EZExternals\glfw\include;$(SolutionDir)2EZExternals\imgui\backends;$(SolutionDir)2EZExternals\dirent\include;$(SolutionDir)2EZExternals\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_USING_V110_SDK71_;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
@@ -106,7 +106,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(SolutionDir)2EZExternals\openssl\include;$(SolutionDir)2EZExternals\glfw\include;$(SolutionDir)2EZExternals\imgui\backends;$(SolutionDir)2EZExternals\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)2EZExternals\openssl\include;$(SolutionDir)2EZExternals\glfw\include;$(SolutionDir)2EZExternals\imgui\backends;$(SolutionDir)2EZExternals\dirent\include;$(SolutionDir)2EZExternals\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_USING_V110_SDK71_;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
     </ClCompile>

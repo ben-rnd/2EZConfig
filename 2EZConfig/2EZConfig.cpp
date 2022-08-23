@@ -6,6 +6,7 @@
 #include "helpers.h"
 #include "inputManager/device.h"
 #include "inputManager/input.h"
+#include <dirent.h>
 
 //externals
 #include <openssl/md5.h>
@@ -19,7 +20,7 @@
 #include <ShlObj.h>
 #include <Shlwapi.h>
 
-using namespace std;
+
 using namespace EZConfig;
 
 void settingsWindow();
@@ -44,7 +45,7 @@ int EZConfig::RenderUI(GLFWwindow* window) {
     char exeName[255];
     GetPrivateProfileStringA("Settings", "EXEName", "EZ2AC.exe", exeName, sizeof(exeName), ConfigIniPath);
 
-    if (ImGui::Begin("Example: Fullscreen window", (bool*)true, flags))
+    if (ImGui::Begin("Menu", (bool*)true, flags))
     {
         ImGui::Text("R U READY 2 GO INSIDA DJ BOX?");
         ImGui::SameLine(ImGui::GetWindowWidth() - 80);
@@ -158,7 +159,6 @@ void settingsWindow() {
 
     char buff[30];
     char exeName[255];
-
 
     //Get game version currently set, if not set try to detect game
     int GameVer = GetPrivateProfileIntA("Settings", "GameVer", -1, ConfigIniPath);
@@ -804,58 +804,70 @@ void HelpMarker(const char* desc)
 
 int detectGameVersion() {
     unsigned char result[MD5_DIGEST_LENGTH];
-    const char* filename;
+    const char* filename = "";
+
+    TCHAR fullPath[MAX_PATH];
+    TCHAR driveLetter[3];
+    TCHAR directory[MAX_PATH];
+    TCHAR FinalPath[MAX_PATH];
+    GetModuleFileName(NULL, fullPath, MAX_PATH);
+    _splitpath(fullPath, driveLetter, directory, NULL, NULL);
+    sprintf(FinalPath, "%s%s", driveLetter, directory);
+    DIR* dir;
+    struct dirent* ent;
+
+    if ((dir = opendir(FinalPath)) != NULL) {
+        /* print all the files and directories within directory */
+        while ((ent = readdir(dir)) != NULL) {
+            
+            if (strcmp(ent->d_name, "2EZConfig.exe") == 0 || !hasEnding(toLower(ent->d_name), ".exe")) {
+                printf("Skipping %s\n", ent->d_name);
+                continue;
+            }
+            printf("Comapring %s\n", ent->d_name);
+
+            FILE* inFile = fopen(ent->d_name, "rb");
+            MD5_CTX mdContext;
+            int bytes;
+            unsigned char data[1024];
 
 
+            //cannot open file, continute to next.
+            if (inFile == NULL) {
+                //Something Broke, Set to  n-1
+                continue;
+            }
 
-    if (fileExists("EZ2DJ.exe")) {
-        filename = "EZ2DJ.exe";
+            //generate file MD5
+            MD5_Init(&mdContext);
+            while ((bytes = fread(data, 1, 1024, inFile)) != 0) {
+                MD5_Update(&mdContext, data, bytes);
+            }
+            MD5_Final(result, &mdContext);
+            fclose(inFile);
+
+            //COMPARE WITH KNOWN MD5's and return first match
+            for (int i = 0; i < IM_ARRAYSIZE(djGames); i++) {
+                if (memcmp(result, djGames[i].md5, MD5_DIGEST_LENGTH) == 0) {
+                    printf("MD5 Matches: %s", djGames[i].name);
+                    return i;
+                };
+            }
+            printf("No Match.. \n");
+        }
+        closedir(dir);
     }
-    else if (fileExists("EZ2DJBe.exe")) {
-        filename = "EZ2DJ.exe";
-    }
-    else if (fileExists("EZ2AC.exe")) {
-        filename = "EZ2AC.exe";
-    }
-    /*else if (fileExists("EZ2Dancer.exe")) {
-        filename = "EZ2Dancer.exe";
-    }*/
     else {
-        //Cant find any EXE. set to n-1
-        return IM_ARRAYSIZE(djGames) - 2;
+        /* could not open directory */
+        perror("");
+        return IM_ARRAYSIZE(djGames) - 2;;
     }
-
-
-    int i;
-    FILE* inFile = fopen(filename, "rb");
-    MD5_CTX mdContext;
-    int bytes;
-    unsigned char data[1024];
-
-    if (inFile == NULL) {
-        //Something Broke, Set to  n-1
-        return IM_ARRAYSIZE(djGames) - 2;
-    }
-
-    MD5_Init(&mdContext);
-    while ((bytes = fread(data, 1, 1024, inFile)) != 0) {
-        MD5_Update(&mdContext, data, bytes);
-    }
-    MD5_Final(result, &mdContext);
-    fclose(inFile);
-
-
-    //COMPARE WITH KNOWN MD5's
-    for (int i = 0; i < IM_ARRAYSIZE(djGames); i++) {
-        if (memcmp(result, djGames[i].md5, MD5_DIGEST_LENGTH) == 0) {
-            return i;
-        };
-    }
-
 
     //shouldve returned already but if nothing found set to n-1
     return IM_ARRAYSIZE(djGames) - 2;
 }
+
+
 
 
 
