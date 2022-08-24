@@ -24,6 +24,7 @@
 using namespace EZConfig;
 
 void settingsWindow();
+void buttonsWindowDancer();
 void analogsWindow();
 void buttonsWindow();
 void HelpMarker(const char* desc);
@@ -42,18 +43,30 @@ int EZConfig::RenderUI(GLFWwindow* window) {
     ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
     ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
 
+    int GameVer = GetPrivateProfileIntA("Settings", "GameVer", -1, ConfigIniPath);
+    if (GameVer < 0) {
+        GameVer = detectGameVersion();
+        WritePrivateProfileInt("Settings", "GameVer", GameVer, ConfigIniPath);
+    }
+
     char exeName[255];
     GetPrivateProfileStringA("Settings", "EXEName", "EZ2AC.exe", exeName, sizeof(exeName), ConfigIniPath);
 
     if (ImGui::Begin("Menu", (bool*)true, flags))
     {
-        ImGui::Text("R U READY 2 GO INSIDA DJ BOX?");
+        if (games[GameVer].isDjGame) {
+            ImGui::Text("R U READY 2 GO INSIDA DJ BOX?");
+        }
+        else {
+            ImGui::Text("HANDS IN THE -AIR-");
+        }
+        
         ImGui::SameLine(ImGui::GetWindowWidth() - 80);
         if (ImGui::Button("Play EZ2!"))
         {
             if (fileExists(exeName)) {
                 int GameVer = GetPrivateProfileIntA("Settings", "GameVer", -1, ConfigIniPath);
-                if (strcmp(djGames[GameVer].name, "6th Trax ~Self Evolution~") == 0) {
+                if (strcmp(games[GameVer].name, "EZ2DJ 6th Trax ~Self Evolution~") == 0) {
                     glfwDestroyWindow(window);
                     glfwTerminate();
                     return sixthBackgroundLoop(exeName);
@@ -72,6 +85,8 @@ int EZConfig::RenderUI(GLFWwindow* window) {
 
         //Selector Tabs
         ImGui::Separator();
+
+
         if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
         {
             //Begin settings tab
@@ -81,26 +96,41 @@ int EZConfig::RenderUI(GLFWwindow* window) {
                 ImGui::EndTabItem();
             }
 
-            //Begin Buttons Tab
-            if (ImGui::BeginTabItem("Buttons"))
-            {
-                buttonsWindow();
-                ImGui::EndTabItem();
-            }
+            if (games[GameVer].isDjGame) {
+                //Begin Buttons Tab
+                if (ImGui::BeginTabItem("Buttons"))
+                {
+                    buttonsWindow();
+                    ImGui::EndTabItem();
+                }
 
-            //Begin Analogs Tab
-            if (ImGui::BeginTabItem("Analogs"))
-            {
-                analogsWindow();
-                ImGui::EndTabItem();
-            }
+                //Begin Analogs Tab
+                if (ImGui::BeginTabItem("Analogs"))
+                {
+                    analogsWindow();
+                    ImGui::EndTabItem();
+                }
 
-            if (ImGui::BeginTabItem("Lights"))
-            {
-                //lightsWindow();
-                ImGui::EndTabItem();
-            }
+                if (ImGui::BeginTabItem("Lights"))
+                {
+                    //lightsWindow();
+                    ImGui::EndTabItem();
+                }
+            }else{
 
+                if (ImGui::BeginTabItem("Buttons"))
+                {
+                    buttonsWindowDancer();
+                    ImGui::EndTabItem();
+                }
+
+                if (ImGui::BeginTabItem("Lights"))
+                {
+                    //lightsWindow();
+                    ImGui::EndTabItem();
+                }
+
+            }
             ImGui::EndTabBar();
         }
     }
@@ -166,6 +196,8 @@ void settingsWindow() {
         GameVer = detectGameVersion();
     }
 
+
+
     GetPrivateProfileStringA("Settings", "EXEName", "EZ2AC.exe", exeName, sizeof(exeName), ConfigIniPath);
    
     bool overrideExe = GetPrivateProfileIntA("Settings", "OverrideExe", 0, ConfigIniPath);
@@ -192,12 +224,12 @@ void settingsWindow() {
 
 
     //Game version dropdown selector
-    if (ImGui::BeginCombo("Game Version", djGames[GameVer].name)) 
+    if (ImGui::BeginCombo("Game Version", games[GameVer].name)) 
     {
-        for (int n = 0; n < IM_ARRAYSIZE(djGames); n++)
+        for (int n = 0; n < IM_ARRAYSIZE(games); n++)
         {
             bool is_selected = (n == GameVer); 
-            if (ImGui::Selectable(djGames[n].name, is_selected)) {
+            if (ImGui::Selectable(games[n].name, is_selected)) {
                 GameVer = n;
             }
             if (GameVer == n) {
@@ -222,7 +254,7 @@ void settingsWindow() {
         WritePrivateProfileString("Settings", "EXEName", exeName, ConfigIniPath);
     }
     else {
-        WritePrivateProfileString("Settings", "EXEName", djGames[GameVer].defaultExeName, ConfigIniPath);
+        WritePrivateProfileString("Settings", "EXEName", games[GameVer].defaultExeName, ConfigIniPath);
     }
 
 
@@ -238,7 +270,7 @@ void settingsWindow() {
 
 
     //Dev binding checkbox
-    if (djGames[GameVer].hasDevBindings) {
+    if (games[GameVer].hasDevBindings) {
         ImGui::Checkbox("Enable Dev Input Binding", &DevControl);
         WritePrivateProfileString("Settings", "EnableDevControls", _itoa(DevControl, buff, 10), ConfigIniPath);
         ImGui::SameLine();
@@ -247,7 +279,7 @@ void settingsWindow() {
 
 
     //if any of these patches exists create new section
-    if (djGames[GameVer].hasSaveSettings || djGames[GameVer].hasModeFreeze || djGames[GameVer].hasSongFreeze) {
+    if (games[GameVer].hasSaveSettings || games[GameVer].hasModeFreeze || games[GameVer].hasSongFreeze) {
         ImGui::Separator();
         ImGui::Text("Patches");
     }
@@ -256,7 +288,7 @@ void settingsWindow() {
     //Reminder to fix timer unfreezing while selecting song difficulty/changing settings (NT and up) and name entry timer freeze
     
     //Mode timer freeze
-    if (djGames[GameVer].hasModeFreeze) {
+    if (games[GameVer].hasModeFreeze) {
 
         ImGui::Checkbox("Enable Mode Select Timer Freeze", &modeFreeze);
         ImGui::SameLine();
@@ -265,7 +297,7 @@ void settingsWindow() {
     }
 
     //Song timer freeze 
-    if (djGames[GameVer].hasSongFreeze) {
+    if (games[GameVer].hasSongFreeze) {
         ImGui::Checkbox("Enable Song Select Timer Freeze", &songFreeze);
         ImGui::SameLine();
         HelpMarker("Pauses the count down timer when selecting a song.");
@@ -275,7 +307,7 @@ void settingsWindow() {
 
     //Final specific save settings options
     //I cant be bothered adapting this to other game versions. Its fairly unstabkle anyway.
-    if (djGames[GameVer].hasSaveSettings) {
+    if (games[GameVer].hasSaveSettings) {
         ImGui::Checkbox("Keep Settings Between Credits", &saveSettings);
         ImGui::SameLine();
         HelpMarker("Settings will not be reset at the end of a credit on standard modes");
@@ -620,6 +652,138 @@ void buttonsWindow() {
     ImGui::EndChild();
 }
 
+void buttonsWindowDancer() {
+
+    TCHAR ControliniPath[MAX_PATH];
+    SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, ControliniPath);
+    PathAppendA(ControliniPath, (char*)"2EZ.ini");
+
+    char buff[10];
+
+    input::InitJoysticks();
+
+    ImGui::BeginChild("buttons", { 0, ImGui::GetWindowHeight() - 85 }, false, ImGuiWindowFlags_HorizontalScrollbar);
+
+    input::JoystickState joystates[15];
+
+    for (int i = 0; i < 15; i++) {
+        joystates[i] = input::GetJoyState(i);
+    }
+
+    //BEGIN IO BINDING
+    ImGui::Text("IO Input");
+    ImGui::SameLine();
+    HelpMarker("This is the binding for the IO Hook");
+    ImGui::Columns(3, "buttons");
+    ImGui::Text("Button");
+    ImGui::NextColumn();
+    ImGui::Text("Binding");
+    ImGui::NextColumn();
+    ImGui::Text("Action");
+    ImGui::Separator();
+    ImGui::NextColumn();
+
+    for (int i = 0; i < IM_ARRAYSIZE(ez2DancerIOButtons); i++) {
+
+        char method[20];
+        GetPrivateProfileStringA(ez2DancerIOButtons[i], "Method", "", method, sizeof(method), ControliniPath);
+        int id = GetPrivateProfileIntA(ez2DancerIOButtons[i], "JoyID", NULL, ControliniPath);
+        int binding = GetPrivateProfileIntA(ez2DancerIOButtons[i], "Binding", NULL, ControliniPath);
+        if (binding != NULL) {
+            if (strcmp(method, "Joy") == 0) {
+                if (joystates[id].buttonsPressed & binding && joystates[id].input) {
+                    ImGui::TextColored(ImVec4(1, 0.7f, 0, 1), ez2DancerIOButtons[i]);
+                }
+                else {
+                    ImGui::Text(ez2DancerIOButtons[i]);
+                }
+                ImGui::NextColumn();
+                if (joystates[id].input) {
+                    ImGui::Text("%sID:%d Btn:%s", method, id, input::getButtonName(binding).c_str());
+                }
+                else {
+                    ImGui::Text("Device Removed");
+                }
+            }
+            else {
+                if (GetAsyncKeyState(binding) & 0x8000) {
+                    ImGui::TextColored(ImVec4(1, 0.7f, 0, 1), ez2DancerIOButtons[i]);
+                }
+                else {
+                    ImGui::Text(ez2DancerIOButtons[i]);
+                }
+
+                ImGui::NextColumn();
+                /*  char name[255];
+                  UINT scanCode = MapVirtualKeyExA(binding, MAPVK_VK_TO_VSC_EX, NULL);
+                  LONG lParamValue = (scanCode << 16);
+                  int result = GetKeyNameTextA(lParamValue, name, 255);*/
+                ImGui::Text("%s:%s", method, GetKeyName(binding).c_str());
+            }
+        }
+        else {
+            ImGui::Text(ez2DancerIOButtons[i]);
+            ImGui::NextColumn();
+            ImGui::BeginDisabled();
+            ImGui::Text("None");
+            ImGui::EndDisabled();
+        }
+
+
+        //BINDING CODE THIS IS SHIT I HATE IT
+        ImGui::NextColumn();
+        char buttonLabel[20];
+        sprintf(buttonLabel, "Bind##%d", i);
+        if (ImGui::Button(buttonLabel))
+            ImGui::OpenPopup(ez2DancerIOButtons[i]);
+        if (ImGui::BeginPopupModal(ez2DancerIOButtons[i], NULL, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Press a button to bind it");
+            if (ImGui::Button("Close")) {
+                ImGui::CloseCurrentPopup();
+            }
+            else {
+                for (int n = 0; n < joyGetNumDevs(); n++) {
+                    if (input::GetJoyState(n).input && input::GetJoyState(n).NumPressed == 1) {
+                        WritePrivateProfileString(ez2DancerIOButtons[i], "Method", "Joy", ControliniPath);
+                        WritePrivateProfileString(ez2DancerIOButtons[i], "JoyID", _itoa(n, buff, sizeof(buff)), ControliniPath);
+                        WritePrivateProfileString(ez2DancerIOButtons[i], "Binding", _itoa(input::GetJoyState(n).buttonsPressed, buff, sizeof(buff)), ControliniPath);
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+
+                // grab current keyboard state
+                int key = input::checkKbPressedState();
+                if (key > 0) {
+                    WritePrivateProfileString(ez2DancerIOButtons[i], "Method", "Key", ControliniPath);
+                    WritePrivateProfileString(ez2DancerIOButtons[i], "JoyID", NULL, ControliniPath);
+                    WritePrivateProfileString(ez2DancerIOButtons[i], "Binding", _itoa(key, buff, sizeof(buff)), ControliniPath); \
+                        ImGui::CloseCurrentPopup();
+                }
+
+            }
+            ImGui::EndPopup();
+            //PLEASE SOMEONE REPLCE IT WITH RAWINPUT OF SOMETHING
+        }
+
+        if (binding != NULL) {
+            //Clear Binding
+            ImGui::SameLine();
+            sprintf(buttonLabel, "Clear##%d", i);
+            if (ImGui::Button(buttonLabel)) {
+                WritePrivateProfileString(ez2DancerIOButtons[i], NULL, NULL, ControliniPath);
+            }
+        }
+        ImGui::NextColumn();
+
+    }
+
+
+    ImGui::Columns(1);
+    input::DestroyJoysticks();
+    ImGui::EndChild();
+}
+
 void analogsWindow() {
 
     TCHAR ControliniPath[MAX_PATH];
@@ -844,19 +1008,20 @@ int detectGameVersion() {
             fclose(inFile);
 
             //COMPARE WITH KNOWN MD5's and return first match
-            for (int i = 0; i < IM_ARRAYSIZE(djGames); i++) {
-                if (memcmp(result, djGames[i].md5, MD5_DIGEST_LENGTH) == 0) {
-                    printf("MD5 Matches: %s", djGames[i].name);
+            for (int i = 0; i < IM_ARRAYSIZE(games); i++) {
+                if (memcmp(result, games[i].md5, MD5_DIGEST_LENGTH) == 0) {
+                    printf("MD5 Matches: %s", games[i].name);
                     return i;
                 };
             }
+
             printf("No Match.. \n");
         }
         closedir(dir);
     }
 
     // could not open directory set to n-1
-    return IM_ARRAYSIZE(djGames) - 2;
+    return IM_ARRAYSIZE(games) - 2;
 }
 
 

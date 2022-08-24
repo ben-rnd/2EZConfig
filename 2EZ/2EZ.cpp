@@ -13,6 +13,7 @@ ioBinding buttonBindings[NUM_OF_IO];
 ioAnalogs analogBindings[NUM_OF_ANALOG];
 Joysticks joysticks[NUM_OF_JOYSTICKS];
 static UINT handState = 0x0000;
+game currGame;
 
 UINT8 getButtonInput(int ionRangeStart) {
     UINT8 output = 255;
@@ -48,13 +49,13 @@ UINT8 getAnalogInput(int player) {
 UINT getFootInput(int ionRangeStart) {
     UINT output = 0x0FFF;
     int count = 0;
-    for (int i = ionRangeStart; i < ionRangeStart + 4; i++) {
+    for (int i = ionRangeStart; i < ionRangeStart + 3; i++) {
         if (buttonBindings[i].bound) {
             if (buttonBindings[i].method) {
                 if (input::isJoyButtonPressed(buttonBindings[i].joyID, buttonBindings[i].binding)) {
                 //    if (!buttonBindings[i].pressed) {
                 //         buttonBindings[i].pressed = true;
-                        output = output & byteArrayDancer[count];
+                        output = output & byteArrayDancerFeet[count];
                 //    }
                 //}
                 //else if (buttonBindings[i].pressed) {
@@ -65,7 +66,7 @@ UINT getFootInput(int ionRangeStart) {
                 if (input::isKbButtonPressed(buttonBindings[i].binding)) {
                 //    if (!buttonBindings[i].pressed) {
                 //       buttonBindings[i].pressed = true;
-                        output = output & byteArrayDancer[count];
+                        output = output & byteArrayDancerFeet[count];
                 //    }
                 //} else if (buttonBindings[i].pressed) {
                 //    buttonBindings[i].pressed = false;
@@ -79,26 +80,25 @@ UINT getFootInput(int ionRangeStart) {
 
 UINT getHandsSensors(int ionRangeStart) {
     UINT output = 0xFFFF;
-    handState = 0x0000;
     int count = 0;
-    for (int i = ionRangeStart; i < ionRangeStart + 8; i++) {
+    for (int i = ionRangeStart; i < ionRangeStart + 10; i++) {
         if (buttonBindings[i].bound) {
             if (buttonBindings[i].method) {
                 if (input::isJoyButtonPressed(buttonBindings[i].joyID, buttonBindings[i].binding)) {
-                    output = output & byteArrayDancerService[count];
+                    output = output & byteArrayDancerHands[count];
                     
                 }
             }
             else {
                 if (input::isKbButtonPressed(buttonBindings[i].binding)) {
-                    output = output & byteArrayDancerService[count];
+                    output = output & byteArrayDancerHands[count];
                 }
             }
         }
         count++;
     }
     //handState = ~output;
-    return ~output;
+    return output^0xFF00;
 }
 
 //Debugging anything in here is a bitch as attaching a debugger 
@@ -111,111 +111,117 @@ LONG WINAPI IOportHandler(PEXCEPTION_POINTERS pExceptionInfo) {
         }
         return EXCEPTION_EXECUTE_HANDLER;
     }
- 
     unsigned int eip_val = *(unsigned int*)pExceptionInfo->ContextRecord->Eip;
-    //
-    // EZ2DJ IO INPUT.
-    // 
+
+
+    if (currGame.isDjGame) {
+        //
+        // EZ2DJ IO INPUT.
+        // 
+
+        // Each port has 8 buttons assigned to it. 
+        // each port reports a 8bit value, 0 = pressed, 1 = not pressed
+        //Input byte from I / O port in DX into AL
+        //EZ2DJ Io Input - Missing coin input, no clue what QE are?
+        // HANDLE IN AL, DX
+        if ((eip_val & 0xFF) == 0xEC) {
+            //handle io calls while controller still being setup
+            DWORD VAL = pExceptionInfo->ContextRecord->Edx & 0xFFFF;
+            switch (pExceptionInfo->ContextRecord->Edx & 0xFFFF) {
+            case 0x101: //TEST SVC E4 E3 E2 E1 P2 P1
+                pExceptionInfo->ContextRecord->Eax = getButtonInput(0);
+                break;
+            case 0x102: //P1 Buttons - PEDAL QE QE B5 B4 B3 B2 B1
+                pExceptionInfo->ContextRecord->Eax = getButtonInput(8);
+                break;
+            case 0x103://P1 TT 0-255
+                pExceptionInfo->ContextRecord->Eax = getAnalogInput(0);
+                break;
+            case 0x104://P2 TT 0-255
+                pExceptionInfo->ContextRecord->Eax = getAnalogInput(1);
+                break;
+            case 0x106: //P2 Buttons - PEDAL QE QE B10 B9 B8 B7 B6
+                pExceptionInfo->ContextRecord->Eax = getButtonInput(16);
+                break;
+            default:
+                pExceptionInfo->ContextRecord->Eax = 0;
+                break;
+            }
+
+            pExceptionInfo->ContextRecord->Eip++;
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+
+        //IO OUTPUT
+        //For Lighting
+        //HANDLE IN  DX, AL
+        if ((eip_val & 0xFF) == 0xEE) {
+            DWORD VAL = pExceptionInfo->ContextRecord->Edx & 0xFF;
+            switch (pExceptionInfo->ContextRecord->Edx & 0xFFFF) {
+            case 0x100: //NA NA NA NEONS LAMPX LAMPX LAMPX LAMPX
+            case 0x101: //NA NA E4 E3 E2 E1 P2 P1
+            case 0x102: //NA NA TT1 B5 B4 B3 B2 B1
+            case 0x103: //NA NA TT2 B10 B9 B8 B7 B6
+            default:
+                break;
+            }
+            pExceptionInfo->ContextRecord->Eip++;
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+    } else {
+        //
+        // EZ2Dancer IO Ports
+        // 
+
+        // Game input
+        // -- Handle IN AX,DX --
+        //IN AX, DX	Input word from I/O port in DX into AX
+        //testing indicates this is somewhat the right range just need to verify further
+        //its a PIA so low prio
+        //values in brackets are the temporary bindings used in the config tool 
+        if ((eip_val & 0xFFFF) == 0xED66) {
+            DWORD VAL = pExceptionInfo->ContextRecord->Edx & 0xFFFF;
+            switch (pExceptionInfo->ContextRecord->Edx & 0xFFFF) {
+            case 0x300: //Feet -> 1P-RIGHT(TEST)(4bits), 1P-BACK(SVC)(4bits), 1P-LEFT(E4)(4bits), Credit count? - how weird
+                pExceptionInfo->ContextRecord->Eax = getFootInput(0);
+                break;
+            case 0x302: //Feet -> 2P-RIGHT(E2)(4bits) 2P-BACK(E1)(4bits)  2P-RIGHT(P2)(4bits) BLANK(P1)
+                pExceptionInfo->ContextRecord->Eax = getFootInput(3);
+                break;
+            case 0x304: //Hands 
+                pExceptionInfo->ContextRecord->Eax = 0;
+                break;
+            case 0x306: //HANDS AND Service TESTING INPUTS B4 B3 B2 B1
+                pExceptionInfo->ContextRecord->Eax = getHandsSensors(6);
+                break;
+            case 0x308://No clue what this maps to
+                /*pExceptionInfo->ContextRecord->Eax = do something
+                break;*/
+
+            default:
+                pExceptionInfo->ContextRecord->Eax = 0xFFFF;
+                break;
+            }
+            // Skip over the instruction that caused the exception:
+            pExceptionInfo->ContextRecord->Eip += 2;
+        }
+
+        // Game output (lights)
+        //--Handle IN DX, AX--
+        if ((eip_val & 0xFFFF) == 0xEF66) {
+            DWORD VAL = pExceptionInfo->ContextRecord->Edx & 0xFFFF;
+            switch (pExceptionInfo->ContextRecord->Edx & 0xFFFF) {
+            default:
+                pExceptionInfo->ContextRecord->Eax = 0;
+                break;
+            }
+            // Skip over the instruction that caused the exception:
+            pExceptionInfo->ContextRecord->Eip += 2;
+        }
+    }
     
-    // Each port has 8 buttons assigned to it. 
-    // each port reports a 8bit value, 0 = pressed, 1 = not pressed
-    //Input byte from I / O port in DX into AL
-    //EZ2DJ Io Input - Missing coin input, no clue what QE are?
-    // HANDLE IN AL, DX
-    if ((eip_val & 0xFF) == 0xEC) {
-        //handle io calls while controller still being setup
-        DWORD VAL = pExceptionInfo->ContextRecord->Edx & 0xFFFF;
-        switch (pExceptionInfo->ContextRecord->Edx & 0xFFFF) {
-        case 0x101: //TEST SVC E4 E3 E2 E1 P2 P1
-            pExceptionInfo->ContextRecord->Eax = getButtonInput(0);
-            break;
-        case 0x102: //P1 Buttons - PEDAL QE QE B5 B4 B3 B2 B1
-            pExceptionInfo->ContextRecord->Eax = getButtonInput(8);
-            break;
-        case 0x103://P1 TT 0-255
-            pExceptionInfo->ContextRecord->Eax = getAnalogInput(0);
-            break;
-        case 0x104://P2 TT 0-255
-            pExceptionInfo->ContextRecord->Eax = getAnalogInput(1);
-            break;
-        case 0x106: //P2 Buttons - PEDAL QE QE B10 B9 B8 B7 B6
-            pExceptionInfo->ContextRecord->Eax = getButtonInput(16);
-            break;
-        default:
-            pExceptionInfo->ContextRecord->Eax = 0;
-            break;
-        }
-        
-        pExceptionInfo->ContextRecord->Eip++;
-        return EXCEPTION_CONTINUE_EXECUTION;
-    }
 
-    //IO OUTPUT
-    //For Lighting
-    //HANDLE IN  DX, AL
-    if ((eip_val & 0xFF) == 0xEE) {
-        DWORD VAL = pExceptionInfo->ContextRecord->Edx & 0xFF;
-        switch (pExceptionInfo->ContextRecord->Edx & 0xFFFF) {
-        case 0x100: //NA NA NA NEONS LAMPX LAMPX LAMPX LAMPX
-        case 0x101: //NA NA E4 E3 E2 E1 P2 P1
-        case 0x102: //NA NA TT1 B5 B4 B3 B2 B1
-        case 0x103: //NA NA TT2 B10 B9 B8 B7 B6
-        default:
-            break;
-        }
-        pExceptionInfo->ContextRecord->Eip++;
-        return EXCEPTION_CONTINUE_EXECUTION;
-    }
-
-    //
-    // EZ2Dancer IO Ports
-    // 
     
-    // Game input
-    // -- Handle IN AX,DX --
-    //IN AX, DX	Input word from I/O port in DX into AX
-    //testing indicates this is somewhat the right range just need to verify further
-    //its a PIA so low prio
-    //values in brackets are the temporary bindings used in the config tool 
-    if ((eip_val & 0xFFFF) == 0xED66) {
-        DWORD VAL = pExceptionInfo->ContextRecord->Edx & 0xFFFF;
-        switch (pExceptionInfo->ContextRecord->Edx & 0xFFFF) {
-        case 0x300: //Feet -> 1P-RIGHT(TEST)(4bits), 1P-BACK(SVC)(4bits), 1P-LEFT(E4)(4bits), Credit count? - how weird
-            pExceptionInfo->ContextRecord->Eax = getFootInput(0);
-            break;
-        case 0x302: //Feet -> 2P-RIGHT(E2)(4bits) 2P-BACK(E1)(4bits)  2P-RIGHT(P2)(4bits) BLANK(P1)
-            pExceptionInfo->ContextRecord->Eax = getFootInput(4);
-            break;
-        case 0x304: //Hands 
-            pExceptionInfo->ContextRecord->Eax = 0;
-            break;
-        case 0x306: //HANDS AND Service TESTING INPUTS B4 B3 B2 B1
-            pExceptionInfo->ContextRecord->Eax = getHandsSensors(12);
-            break;
-        case 0x308://No clue what this maps to
-            /*pExceptionInfo->ContextRecord->Eax = do something
-            break;*/
-
-        default:
-            pExceptionInfo->ContextRecord->Eax = 0xFFFF;
-            break;
-        }
-        // Skip over the instruction that caused the exception:
-        pExceptionInfo->ContextRecord->Eip += 2;
-    }
-
-    // Game output (lights)
-    //--Handle IN DX, AX--
-    if ((eip_val & 0xFFFF) == 0xEF66) {
-        DWORD VAL = pExceptionInfo->ContextRecord->Edx & 0xFFFF;
-        switch (pExceptionInfo->ContextRecord->Edx & 0xFFFF) {
-        default:
-            pExceptionInfo->ContextRecord->Eax = 0;
-            break;
-        }
-        // Skip over the instruction that caused the exception:
-        pExceptionInfo->ContextRecord->Eip += 2;
-    }
 
     /*
     If another handler should be called in sequence,
@@ -232,7 +238,7 @@ DWORD PatchThread() {
     HANDLE ez2Proc = GetCurrentProcess();
     uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(NULL);
     int GameVer = GetPrivateProfileIntA("Settings", "GameVer", 0, config);
-    djGame currGame = djGames[GameVer];
+    currGame = games[GameVer];
 
     //Get Button Bindings config file
     char ControliniPath[MAX_PATH];
@@ -247,43 +253,66 @@ DWORD PatchThread() {
         SetUnhandledExceptionFilter(IOportHandler);
     }
 
+    if (currGame.isDjGame) {
+        //Setup Buttons
+        for (int b = 0; b < NUM_OF_IO; b++) {
+            char buff[20];
+            const char* ioButton;
+            GetPrivateProfileStringA(ioButtons[b], "method", NULL, buff, 20, ControliniPath);
+            if (buff != NULL) {
 
-    //Setup Buttons
-    for (int b = 0; b < NUM_OF_IO; b++) {
-        char buff[20];
-        GetPrivateProfileStringA(ioButtons[b], "method", NULL, buff, 20, ControliniPath);
-        if (buff != NULL) {
+                if (strcmp(buff, "Key") == 0) {
+                    buttonBindings[b].bound = true;
+                    buttonBindings[b].method = 0;
+                }
+                else {
+                    buttonBindings[b].bound = true;
+                    buttonBindings[b].method = 1;
+                    joysticks[buttonBindings[b].joyID].init = true;
+                }
+                buttonBindings[b].joyID = GetPrivateProfileIntA(ioButtons[b], "JoyID", 16, ControliniPath);
+                buttonBindings[b].binding = GetPrivateProfileIntA(ioButtons[b], "Binding", NULL, ControliniPath);
+            }
 
-            if (strcmp(buff, "Key") == 0) {
-                buttonBindings[b].bound = true;
-                buttonBindings[b].method = 0;
-            }
-            else {
-                buttonBindings[b].bound = true;
-                buttonBindings[b].method = 1;
-                joysticks[buttonBindings[b].joyID].init = true;
-            }
-            buttonBindings[b].joyID = GetPrivateProfileIntA(ioButtons[b], "JoyID", 16, ControliniPath);
-            buttonBindings[b].binding = GetPrivateProfileIntA(ioButtons[b], "Binding", NULL, ControliniPath);
         }
-       
-    }
 
-    //Setup Analogs
-    for (int a = 0; a < NUM_OF_ANALOG; a++) {
-        char buff[20];
-        GetPrivateProfileStringA(analogs[a], "Axis", NULL, buff, 20, ControliniPath);
-        if (buff != NULL) {
-            analogBindings[a].bound = true;
-            joysticks[analogBindings[a].joyID].init = true;
-            if (strcmp(buff, "X") == 0) {
-                analogBindings[a].axis = 0;
+        //Setup Analogs
+        for (int a = 0; a < NUM_OF_ANALOG; a++) {
+            char buff[20];
+            GetPrivateProfileStringA(analogs[a], "Axis", NULL, buff, 20, ControliniPath);
+            if (buff != NULL) {
+                analogBindings[a].bound = true;
+                joysticks[analogBindings[a].joyID].init = true;
+                if (strcmp(buff, "X") == 0) {
+                    analogBindings[a].axis = 0;
+                }
+                else {
+                    analogBindings[a].axis = 1;
+                }
+                analogBindings[a].joyID = GetPrivateProfileIntA(analogs[a], "JoyID", 16, ControliniPath);
+                analogBindings[a].reverse = GetPrivateProfileIntA(analogs[a], "Reverse", 0, ControliniPath);
             }
-            else {
-                analogBindings[a].axis = 1;
+        }
+    }else{
+        for (int b = 0; b < IM_ARRAYSIZE(ez2DancerIOButtons); b++) {
+            char buff[20];
+            const char* ioButton;
+            GetPrivateProfileStringA(ez2DancerIOButtons[b], "method", NULL, buff, 20, ControliniPath);
+            if (buff != NULL) {
+
+                if (strcmp(buff, "Key") == 0) {
+                    buttonBindings[b].bound = true;
+                    buttonBindings[b].method = 0;
+                }
+                else {
+                    buttonBindings[b].bound = true;
+                    buttonBindings[b].method = 1;
+                    joysticks[buttonBindings[b].joyID].init = true;
+                }
+                buttonBindings[b].joyID = GetPrivateProfileIntA(ez2DancerIOButtons[b], "JoyID", 16, ControliniPath);
+                buttonBindings[b].binding = GetPrivateProfileIntA(ez2DancerIOButtons[b], "Binding", NULL, ControliniPath);
             }
-            analogBindings[a].joyID = GetPrivateProfileIntA(analogs[a], "JoyID", 16, ControliniPath);
-            analogBindings[a].reverse = GetPrivateProfileIntA(analogs[a], "Reverse", 0, ControliniPath);
+
         }
     }
     

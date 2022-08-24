@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
             char exeName[255];
             GetPrivateProfileStringA("Settings", "EXEName", "EZ2AC.exe", exeName, sizeof(exeName), ".\\2EZ.ini");
             int gameVer = GetPrivateProfileIntA("Settings", "GameVer", -1, EZConfig::ConfigIniPath);
-            if (strcmp(EZConfig::djGames[gameVer].name, "6th Trax ~Self Evolution~") == 0){
+            if (strcmp(EZConfig::games[gameVer].name, "6th Trax ~Self Evolution~") == 0){
                 return(EZConfig::sixthBackgroundLoop(exeName));
             }
             else {

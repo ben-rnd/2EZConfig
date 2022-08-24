@@ -12,21 +12,15 @@
 
 DWORD byteArray[8] = { 0b01111111, 0b10111111, 0b11011111,0b11101111,0b11110111,0b11111011,0b11111101, 0b11111110 };
 
-//ez2dancer panels have 4 sensors each, and rather than the IO reading each of these individually and determining a press
-//the game receives all 4 states and determines it itself. For Accuracy sake, i think all sensors should be mappable
-//But for now will just combine the inputs.
-//DWORD byteArrayDancer[12] = {0b011111111111, 0b101111111111, 0b110111111111, 0b111011111111
-//							   0b111101111111, 0b111110111111, 0b111111011111, 0b111111101111
-//							   0b111111110111, 0b111111111011, 0b111111111101, 0b111111111110};
+DWORD byteArrayDancerFeet[4] = {0b111111110000,  //LEFT
+								0b111100001111,  //CENTER 
+								0b000011111111 };//RIGHT 
 
-DWORD byteArrayDancer[4] = {0b000011111111, 
-							0b111100001111, 
-							0b111111110000,
-							0b1111111111111111};
-
-DWORD byteArrayDancerService[12] = {0b1111011111111111, 0b1111101111111111, 0b1101111111111111,0b1110111111111111, 
-									0b1111110111111111, 0b1111111011111111, 0b0111111111111111, 0b1011111111111111,  
-									0b00000001111011111, 0b0000000011101111, 0b0000000011111011, 0b0000000011111111, };
+							       //         L Hand Top         L Hand Bottom        R Hand Top	     R Hand Bottom
+DWORD byteArrayDancerHands[10] = { /*P1*/ 0b1111011111111111, 0b1110111111111111, 0b1111101111111111, 0b1101111111111111,
+								   /*P2*/ 0b1111110111111111, 0b1011111111111111, 0b1111111011111111, 0b0111111111111111,
+								   //            Test              Service   
+						      /*Service*/ 0b1111111100100000, 0b1111111100010000 };//, Coin: 0b1111111100000100
 
 
 
@@ -57,35 +51,41 @@ typedef struct JoySticks {
 
 //MAKE SURE THIS ARRAY ALWAYS MATCHES THE 2EZCONFIG djGames ARRAY ORDER & SIZE
 #define OFFSET_SIZE 10
-static struct djGame {
+static struct game {
 	const char* name;
 	bool baseAddressOverride;
 	uintptr_t devOffset;
 	uintptr_t modeTimeOffset;
 	uintptr_t songTimerOffset;
-} djGames[] = {
-	{"The 1st Tracks", false, 0x00, 0x00, 0x00}, //no dump
-	{"The 1st Tracks Special Edition", false, 0x00, 0x00, 0x00},
-	{"2nd Trax ~It rules once again~", false, 0x00, 0x00, 0x00}, //no dump
-	{"3rd Trax ~Absolute Pitch~ ", false, 0x00, 0x00, 0x00},
-	{"4th Trax ~OVER MIND~ ", false, 0x00, 0x00, 0x00},
-	{"Platinum", false, 0x00, 0x00, 0x00 },
-	{"6th Trax ~Self Evolution~", false, 0x00, 0x00, 0x00},
-	{"7th Trax ~Resistance~", false, 0x00, 0x00, 0x00},
-	{"7th Trax Ver 1.5", false, 0x00, 0x00, 0x00},
-	{"7th Trax Ver 2.0", false, 0x00, 0x00, 0x00},
-	{"Codename: Violet", false, 0x00, 0x00, 0x00},
-	{"Bonus Edition", false, 0x00, 0x00, 0x00}, //no dump
-	{"Bonus Edition revision A", false, 0x00, 0x00, 0x00},
-	{"Azure ExpressioN", false, 0x00, 0x00, 0x00}, //no dump
-	{"Azure ExpressioN Integral Composition", false, 0x00, 0x00, 0x00}, //no dump
-	{"Endless Circulation", false, 0xEFD4CC, 0x5978A, 0x53289}, //no good dump 
-	{"Evolve (Win98)", false, 0x00, 0x00, 0x00},
-	{"Evolve", false, 0x944C9C, 0x3A0DE, 0x38257},
-	{"Night Traveller", true, 0xF0FE14, 0x42A6D, 0x41854},
-	{"Time Traveller (1.83)", true, 0x1309D74, 0x4740A, 0x45F6C},// need updated dump
-	{"Final", false, 0x130CFB4, 0x4A693, 0x46C75},
-	{"Final:EX", true, 0x130DFFC, 0x4B773, 0x47CBA},
+	bool isDjGame;
+} games[] = {
+	{"EZ2Dancer The 1st MOVE",false, 0x00, 0x00, 0x00, false},
+	{"EZ2Dancer The 2nd MOVE",false, 0x00, 0x00, 0x00, false}, //no dump
+	{"EZ2Dancer UK MOVE ",false, 0x00, 0x00, 0x00, false},
+	{"EZ2Dancer UK MOVE Special Edition", false, 0x00, 0x00, 0x00, false}, //no dump
+	{"EZ2Dancer SuperChina",false, 0x00, 0x00, 0x00, false}, //no dump
+	{"The 1st Tracks", false, 0x00, 0x00, 0x00, true}, //no dump
+	{"The 1st Tracks Special Edition", false, 0x00, 0x00, 0x00, true},
+	{"2nd Trax ~It rules once again~", false, 0x00, 0x00, 0x00, true}, //no dump
+	{"3rd Trax ~Absolute Pitch~ ", false, 0x00, 0x00, 0x00, true},
+	{"4th Trax ~OVER MIND~ ", false, 0x00, 0x00, 0x00, true},
+	{"Platinum", false, 0x00, 0x00, 0x00, true },
+	{"6th Trax ~Self Evolution~", false, 0x00, 0x00, 0x00, true},
+	{"7th Trax ~Resistance~", false, 0x00, 0x00, 0x00, true},
+	{"7th Trax Ver 1.5", false, 0x00, 0x00, 0x00, true},
+	{"7th Trax Ver 2.0", false, 0x00, 0x00, 0x00, true},
+	{"Codename: Violet", false, 0x00, 0x00, 0x00, true},
+	{"Bonus Edition", false, 0x00, 0x00, 0x00, true}, //no dump
+	{"Bonus Edition revision A", false, 0x00, 0x00, 0x00, true},
+	{"Azure ExpressioN", false, 0x00, 0x00, 0x00, true}, //no dump
+	{"Azure ExpressioN Integral Composition", false, 0x00, 0x00, 0x00, true}, //no dump
+	{"Endless Circulation", false, 0xEFD4CC, 0x5978A, 0x53289, true}, //no good dump 
+	{"Evolve (Win98)", false, 0x00, 0x00, 0x00, true},
+	{"Evolve", false, 0x944C9C, 0x3A0DE, 0x38257, true},
+	{"Night Traveller", true, 0xF0FE14, 0x42A6D, 0x41854, true},
+	{"Time Traveller (1.83)", true, 0x1309D74, 0x4740A, 0x45F6C, true},// need updated dump
+	{"Final", false, 0x130CFB4, 0x4A693, 0x46C75, true},
+	{"Final:EX", true, 0x130DFFC, 0x4B773, 0x47CBA, true},
 };
 
 const char* devButtons[] = { "dQuit", "dTest", "dService", "dCoin","dP1 Start", "dP2 Start", "dEffector 1", 
@@ -103,6 +103,32 @@ const char* lights[] =  {"Effector 1", "Effector 2", "Effector 3", "Effector 4",
                         "P2 Turntable", "P2 1", "P1 2", "P1 3", "P1 4", "P1 5", "P1 Turntable", "P2 1", "P2 2",
                         "P2 3", "P2 4", "P2 5", "Neons", "Red Lamp L", "Red Lamp R", "Blue Lamp L", "Blue Lamp R" };
 
+static const char* ez2DancerIOButtons[] = { 
+
+
+	//Should we split the foot buttons out to the 4 sensors each? 
+	"P1 Left",
+	"P1 Centre",
+	"P1 Right",
+
+	"P2 Left",
+	"P2 Centre",
+	"P2 Right",
+
+	"P1 L Sensor Top",
+	"P1 L Sesor Bottom",
+	"P1 R Sensor Top",
+	"P1 R Sesor Bottom",
+
+	"P2 L Sensor Top",
+	"P2 L Sesor Bottom",
+	"P2 R Sensor Top",
+	"P2 R Sesor Bottom",
+	
+	"Test",
+	"Service"
+	//"Coin", //IO does this really weird.. will leave out for now
+};
 
 
 void ChangeMemory(uintptr_t baseaddress, int value, uintptr_t offset, bool isProtected)
