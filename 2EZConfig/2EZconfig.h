@@ -139,8 +139,6 @@ namespace EZConfig {
                                                 "P2 L Sesor Bottom",
                                                 "P2 R Sensor Top",
                                                 "P2 R Sesor Bottom" };
-
-    const LPCSTR ConfigIniPath = ".\\2EZ.ini";
     
     
     //FINAL SHIT
