@@ -87,7 +87,7 @@ const char* lights[] =  {"Effector 1", "Effector 2", "Effector 3", "Effector 4",
 
 
 
-void ChangeMemory(uintptr_t baseaddress, int value, uintptr_t offset, bool isProtected)
+void ChangeMemory(uintptr_t baseaddress, int value, uintptr_t offset)
 {
 	unsigned long OldProtection;
 	VirtualProtect((LPVOID)(baseaddress + offset), sizeof(value), PAGE_EXECUTE_READWRITE, &OldProtection);
@@ -131,7 +131,7 @@ void setDevBinding(uintptr_t baseAddress, uintptr_t startAddress, LPCSTR binding
 			//sets the key that will be checked by the getAsyncKeypress call in the ez2 exe  
 			//this is why its kb binding only, theres no point around allowing button bidning as itll just be a joy2key type solution
 			//written into the DLL, users should just use the IO binding instead
-			ChangeMemory(baseAddress, binding, startAddress + (inputOffset * i), false);
+			ChangeMemory(baseAddress, binding, startAddress + (inputOffset * i));
 
 			//Setting this address to 0 enables the key - but disabled the IO equiv
 			//Known values:
@@ -139,7 +139,7 @@ void setDevBinding(uintptr_t baseAddress, uintptr_t startAddress, LPCSTR binding
 			//1 = ??
 			//2 = ??
 			//3 = Disabled - use IO
-			ChangeMemory(baseAddress, 0, startAddress + (inputOffset * i) - 4, false);
+			ChangeMemory(baseAddress, 0, startAddress + (inputOffset * i) - 4);
 		}
 	}
 }
@@ -161,7 +161,7 @@ void FnKeepSettings(uintptr_t baseAddress) {			//Random  //Note    //Auto    /Fa
 
 	if (GetPrivateProfileIntA("KeepSettings", "Note", 1, ".\\2EZ.ini")) {
 		fnNOPResetCode(baseAddress, resetAddresses[1]);
-		ChangeMemory(baseAddress, defaultNote, Note, false);
+		ChangeMemory(baseAddress, defaultNote, Note);
 	}
 
 	if (GetPrivateProfileIntA("KeepSettings", "Auto", 1, ".\\2EZ.ini")) {
@@ -178,15 +178,54 @@ void FnKeepSettings(uintptr_t baseAddress) {			//Random  //Note    //Auto    /Fa
 
 	if (GetPrivateProfileIntA("KeepSettings", "Visual", 1, ".\\2EZ.ini")) {
 		fnNOPResetCode(baseAddress, resetAddresses[5]);
-		ChangeMemory(baseAddress, defaultVisual, Visual, false);
+		ChangeMemory(baseAddress, defaultVisual, Visual);
 	}
 
 	if (GetPrivateProfileIntA("KeepSettings", "Panel", 1, ".\\2EZ.ini")) {
 		fnNOPResetCode(baseAddress, resetAddresses[6]);
-		ChangeMemory(baseAddress, defaultPanel, Panel, false);
+		ChangeMemory(baseAddress, defaultPanel, Panel);
 	}
 
 }
+
+//Expermental pfree like hack
+void FNStageLock(uintptr_t baseAddress, bool noFails) {								 
+
+
+	if (GetPrivateProfileIntA("StageLock", "noFail", 0, ".\\2EZ.ini")) { // will freese at stage 1 - You cant fail out of a song during this
+
+		ChangeMemory(baseAddress, 0x3B, 0x16D15);//5kOnly & Radio Mix
+		ChangeMemory(baseAddress, 0x3B, 0x16835);//RubyMix
+		ChangeMemory(baseAddress, 0x3B, 0x16AFF);//5 key Standard (Street Mix)
+		ChangeMemory(baseAddress, 0x3B, 0x177EC);//10 key (Club Mix)
+		//ChangeMemory(baseAddress, 0x8B, 0x00);//14k
+		//ChangeMemory(baseAddress, 0x8B, 0x00);//ez2Catch
+		ChangeMemory(baseAddress, 0x3B, 0x17E25);//Turntable
+
+	} else { //After 1st stage completed, will freese at stage 2, allowing you to fail out of a song
+			
+		ChangeMemory(baseAddress, 0x8B, 0x16D15);//5kOnly & Radio Mix
+		ChangeMemory(baseAddress, 0x8B, 0x16835);//RubyMix
+		ChangeMemory(baseAddress, 0x8B, 0x16AFF);//5 key Standard (Street Mix)
+		ChangeMemory(baseAddress, 0x8B, 0x177EC);//10 key (Club Mix)
+		//ChangeMemory(baseAddress, 0x8B, 0x00);//14k
+		//ChangeMemory(baseAddress, 0x8B, 0x00);//ez2Catch
+		ChangeMemory(baseAddress, 0x8B, 0x17E25);//Turntable
+	}
+
+	if (GetPrivateProfileIntA("StageLock", "noGameOver", 0, ".\\2EZ.ini")) {
+		
+		ChangeMemory(baseAddress, 0xCF, 0x16C3B);//5 Key Only and Radio Mix
+		ChangeMemory(baseAddress, 0xC6, 0x16A27);//5 key Standard (Street Mix)
+		ChangeMemory(baseAddress, 0xCE, 0x17707);//10 key (Club Mix)
+		//ChangeMemory(baseAddress, 0x0, 0x00);//14Key (Space Mix)
+		//ChangeMemory(baseAddress, 0x00, 0x00);//ez2Catch
+		ChangeMemory(baseAddress, 0xCE, 0x17D3B);//Turntable
+	}
+	
+
+}
+
 
 
 

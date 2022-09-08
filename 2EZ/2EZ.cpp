@@ -244,7 +244,7 @@ DWORD PatchThread() {
     //since we're already hooking IO theres no problem doing this.
     Sleep(GetPrivateProfileIntA("Settings", "BindDelay", 2000, config));
 
-    if (strcmp(currGame.name, "Evolve") == 0) {
+    if (strcmp(currGame.name, "Evolve") == 0 && GetPrivateProfileIntA("Settings", "EvWin10Fix", 0, config)) {
         NOPMemory(baseAddress, 0x11757);
         NOPMemory(baseAddress, 0x11758);
         NOPMemory(baseAddress, 0x11759);
@@ -271,11 +271,13 @@ DWORD PatchThread() {
     }
 
     //FINAL save settings patch
-    if (strcmp(currGame.name, "Final") == 0 && GetPrivateProfileIntA("Settings", "KeepSettings", 0, config)) {
+    if (strcmp(currGame.name, "Final") == 0 && GetPrivateProfileIntA("KeepSettings", "Enabled", 0, config)) {
             FnKeepSettings(baseAddress);
     }
 
-
+    if (strcmp(currGame.name, "Final") == 0 && GetPrivateProfileIntA("StageLock", "Enabled", 0, config)) {
+       FNStageLock(baseAddress, false);
+    }
 
     //re-enable keyboard if playing FNEX
     if (strcmp(currGame.name, "Final:EX") == 0) {

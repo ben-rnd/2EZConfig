@@ -174,8 +174,16 @@ void settingsWindow() {
     bool modeFreeze = GetPrivateProfileIntA("Settings", "ModeSelectTimerFreeze", 0, ConfigIniPath);
     bool songFreeze = GetPrivateProfileIntA("Settings", "SongSelectTimerFreeze", 0, ConfigIniPath);
 
+    // EVOLVE settings
+    bool evWin10Fix = GetPrivateProfileIntA("Settings", "EvWin10Fix", 0, ConfigIniPath);
+
+    //Stage Lock Settings
+    bool stageLock = GetPrivateProfileIntA("StageLock", "Enabled", 0, ConfigIniPath);
+    bool noGameOver = GetPrivateProfileIntA("StageLock", "noGameOver", 1, ConfigIniPath);
+    bool noFail = GetPrivateProfileIntA("StageLock", "noFail", 0, ConfigIniPath);
+
     //Setting Save Patch for final, wont bother with this again for any other games
-    bool saveSettings = GetPrivateProfileIntA("Settings", "KeepSettings", 0, ConfigIniPath);
+    bool saveSettings = GetPrivateProfileIntA("KeepSettings", "Enabled", 0, ConfigIniPath);
     bool random = GetPrivateProfileIntA("KeepSettings", "Random", 1, ConfigIniPath);
     bool note = GetPrivateProfileIntA("KeepSettings", "Note", 1, ConfigIniPath);
     bool autoScratchPedal = GetPrivateProfileIntA("KeepSettings", "Auto", 1, ConfigIniPath);
@@ -272,6 +280,43 @@ void settingsWindow() {
         WritePrivateProfileString("Settings", "SongSelectTimerFreeze", _itoa(songFreeze, buff, 10), ConfigIniPath);
     }
 
+    if (strcmp(djGames[GameVer].name, "Evolve") == 0) {
+        ImGui::Checkbox("Evolve Win10 Fix", &evWin10Fix);
+        ImGui::SameLine();
+        HelpMarker("Fix for the crash after the warning screen.");
+        WritePrivateProfileString("Settings", "EvWin10Fix", _itoa(evWin10Fix, buff, 10), ConfigIniPath);
+    }
+
+    if (djGames[GameVer].hasSaveSettings || djGames[GameVer].hasStageLock) {
+        ImGui::Separator();
+        ImGui::Text("Experimental");
+        ImGui::SameLine();
+        HelpMarker("These patches arent thourougly tested and may cause your game to crash.");
+    }
+
+    if (djGames[GameVer].hasStageLock) {
+        ImGui::Checkbox("Enable Stage Lock", &stageLock);
+        ImGui::SameLine();
+        HelpMarker("A 'Premium Free' like patch that will stop the credit ending after the 3rd song. You can exit out to title screen by pressing escape to quit your current session.\
+                        By default you are locked to Stage 2 after completing the first stage. ");
+        WritePrivateProfileString("StageLock", "Enabled", _itoa(stageLock, buff, 10), ConfigIniPath);
+
+        if (stageLock) {
+            ImGui::Indent(16.0f);
+
+            ImGui::Checkbox("No Game Over", &noGameOver);
+            WritePrivateProfileString("StageLock", "noGameOver", _itoa(noGameOver, buff, 10), ConfigIniPath);
+            ImGui::SameLine();
+            HelpMarker("Failing a song will never result in a game over.");
+        
+            ImGui::Checkbox("No Fail out", &noFail);
+            WritePrivateProfileString("StageLock", "noFail", _itoa(noFail, buff, 10), ConfigIniPath);
+            ImGui::SameLine();
+            HelpMarker("You will be locked to Stage 1, where you cannot fail out of a song.");
+
+            ImGui::Unindent(16.0f);
+        }
+    }
 
     //Final specific save settings options
     //I cant be bothered adapting this to other game versions. Its fairly unstabkle anyway.
@@ -279,7 +324,7 @@ void settingsWindow() {
         ImGui::Checkbox("Keep Settings Between Credits", &saveSettings);
         ImGui::SameLine();
         HelpMarker("Settings will not be reset at the end of a credit on standard modes");
-        WritePrivateProfileString("Settings", "KeepSettings", _itoa(saveSettings, buff, 10), ConfigIniPath);
+        WritePrivateProfileString("KeepSettings", "Enabled", _itoa(saveSettings, buff, 10), ConfigIniPath);
 
         if (saveSettings) {
             ImGui::TextColored(ImVec4(1, 0, 0, 1), "Cannot guarantee compatibility with 5key Only, Ruby,");
