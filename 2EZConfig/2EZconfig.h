@@ -40,10 +40,10 @@ namespace EZConfig {
         {"Endless Circulation", "EZ2AC.exe", "", true, true, true, false, false}, //no dump
         {"Evolve (Win98)", "EZ2AC.exe", "", false, false, false, false, false},
         {"Evolve", "EZ2AC.exe", {'\x09','\x20','\xe5','\x4a','\x25','\x39','\xe3','\xfd','\x5d','\xe5','\x3a','\xa3','\x7d','\x9b','\x33','\x8a'}, true, true, true, false, false},
-        {"Night Traveller", "EZ2AC.exe", {'\x6c','\x12','\x50','\x9f','\x89','\xb3','\x50','\x4c','\x1a','\xab','\xc2','\x9b','\xa7','\xb7','\x32','\xe8'}, true, true, true, false, false},
+        {"Night Traveller", "EZ2AC.exe", {'\x6c','\x12','\x50','\x9f','\x89','\xb3','\x50','\x4c','\x1a','\xab','\xc2','\x9b','\xa7','\xb7','\x32','\xe8'}, true, true, true, false, true},
         {"Time Traveller (1.83)", "EZ2AC.exe", {'\x03','\x9a','\x5d','\x23','\x3c','\x15','\x12','\x01','\x11','\x2f','\x00','\xfb','\xb6','\x4c','\x21','\xda'}, true, true, true, false, false},
         {"Final", "EZ2AC.exe", {'\x33','\x6a','\xb9','\x6c','\xae','\x01','\xe0','\x1e','\x06','\x9f','\xb8','\x05','\x58','\x3d','\x02','\x89'}, true, true, true, true, true},
-        {"Final:EX", "EZ2AC.exe", {'\xbc','\xe8','\x48','\xf2','\xd7','\x94','\x5c','\x36','\x12','\x0a','\x2a','\xda','\xa5','\x73','\x57','\x48'}, true, true, true, false, false},
+        {"Final:EX", "EZ2AC.exe", {'\xbc','\xe8','\x48','\xf2','\xd7','\x94','\x5c','\x36','\x12','\x0a','\x2a','\xda','\xa5','\x73','\x57','\x48'}, true, true, true, false, true},
     };
 
     static struct dancerGame {

@@ -183,6 +183,7 @@ DWORD PatchThread() {
     int GameVer = GetPrivateProfileIntA("Settings", "GameVer", 0, config);
     djGame currGame = djGames[GameVer];
 
+
     //Get Button Bindings config file
     char ControliniPath[MAX_PATH];
     SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, ControliniPath);
@@ -190,6 +191,12 @@ DWORD PatchThread() {
     
     //Short sleep to fix crash when using legitimate data with dongle, can be overrden in ini if causing issues.
     Sleep(GetPrivateProfileIntA("Settings", "ShimDelay", 10, config));
+
+
+    //re-enable keyboard if playing FNEX - do this before any delays
+    if (strcmp(currGame.name, "Final:EX") == 0) {
+        zeroMemory(baseAddress, 0x15D51);
+    }
 
     //Hook IO 
     if (GetPrivateProfileIntA("Settings", "EnableIOHook", 0, config)) {
@@ -275,15 +282,21 @@ DWORD PatchThread() {
             FnKeepSettings(baseAddress);
     }
 
-    if (strcmp(currGame.name, "Final") == 0 && GetPrivateProfileIntA("StageLock", "Enabled", 0, config)) {
-       FNStageLock(baseAddress, false);
-    }
+    if (GetPrivateProfileIntA("StageLock", "Enabled", 0, config)) {
+        
+        if (strcmp(currGame.name, "Final") == 0) {
+            FNStageLock(baseAddress);
+        }
 
-    //re-enable keyboard if playing FNEX
-    if (strcmp(currGame.name, "Final:EX") == 0) {
-        zeroMemory(baseAddress, 0x15D51);
-    }
+        if (strcmp(currGame.name, "Night Traveller") == 0) {
+            NTStageLock(baseAddress);
+        }
 
+        if (strcmp(currGame.name, "Final:EX") == 0) {
+            FNEXStageLock(baseAddress);
+        }
+        
+    }
     
 
     return NULL;

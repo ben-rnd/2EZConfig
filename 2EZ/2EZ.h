@@ -114,13 +114,6 @@ void NOPMemory(uintptr_t baseaddress, uintptr_t offset)
 
 }
 
-//each game felt too different to have a common function for this
-void fnNOPResetCode(uintptr_t baseAddress, uintptr_t resetAddresses) {
-	for (int z = 0; z < 5; z++) {
-		NOPMemory(baseAddress, resetAddresses + z);
-	}
-}
-
 void setDevBinding(uintptr_t baseAddress, uintptr_t startAddress, LPCSTR bindings) {
 	DWORD inputOffset = 0x14;
 	for (int i = 0; i < IM_ARRAYSIZE(devButtons); i++) {
@@ -146,6 +139,14 @@ void setDevBinding(uintptr_t baseAddress, uintptr_t startAddress, LPCSTR binding
 
 
 //experimental save settings patch, crashes lots of game modes :)
+//each game felt too different to have a common function for this
+void fnNOPResetCode(uintptr_t baseAddress, uintptr_t resetAddresses) {
+	for (int z = 0; z < 5; z++) {
+		NOPMemory(baseAddress, resetAddresses + z);
+	}
+}
+
+
 void FnKeepSettings(uintptr_t baseAddress) {			//Random  //Note    //Auto    /Fade     /Scroll  //Visual	//Panel
 	DWORD resetAddresses[7] = {0x30C0F, 0x30C23, 0x30C46, 0x30C0A, 0x30C19, 0x30BEC, 0x30C87};
 	DWORD Panel = 0x33D0F3C;
@@ -189,7 +190,7 @@ void FnKeepSettings(uintptr_t baseAddress) {			//Random  //Note    //Auto    /Fa
 }
 
 //Expermental pfree like hack
-void FNStageLock(uintptr_t baseAddress, bool noFails) {								 
+void FNStageLock(uintptr_t baseAddress) {								 
 
 
 	if (GetPrivateProfileIntA("StageLock", "noFail", 0, ".\\2EZ.ini")) { // will freese at stage 1 - You cant fail out of a song during this
@@ -198,8 +199,8 @@ void FNStageLock(uintptr_t baseAddress, bool noFails) {
 		ChangeMemory(baseAddress, 0x3B, 0x16835);//RubyMix
 		ChangeMemory(baseAddress, 0x3B, 0x16AFF);//5 key Standard (Street Mix)
 		ChangeMemory(baseAddress, 0x3B, 0x177EC);//10 key (Club Mix)
-		//ChangeMemory(baseAddress, 0x8B, 0x00);//14k
-		//ChangeMemory(baseAddress, 0x8B, 0x00);//ez2Catch
+		ChangeMemory(baseAddress, 0x3B, 0x17979);//14k
+		ChangeMemory(baseAddress, 0x00, 0x16250);//ez2Catch
 		ChangeMemory(baseAddress, 0x3B, 0x17E25);//Turntable
 
 	} else { //After 1st stage completed, will freese at stage 2, allowing you to fail out of a song
@@ -208,8 +209,10 @@ void FNStageLock(uintptr_t baseAddress, bool noFails) {
 		ChangeMemory(baseAddress, 0x8B, 0x16835);//RubyMix
 		ChangeMemory(baseAddress, 0x8B, 0x16AFF);//5 key Standard (Street Mix)
 		ChangeMemory(baseAddress, 0x8B, 0x177EC);//10 key (Club Mix)
-		//ChangeMemory(baseAddress, 0x8B, 0x00);//14k
-		//ChangeMemory(baseAddress, 0x8B, 0x00);//ez2Catch
+		ChangeMemory(baseAddress, 0x8B, 0x17977);//14k
+		ChangeMemory(baseAddress, 0x6A, 0x16253);//ez2Catch
+		ChangeMemory(baseAddress, 0x01, 0x16254);
+		ChangeMemory(baseAddress, 0x5E, 0x16255);
 		ChangeMemory(baseAddress, 0x8B, 0x17E25);//Turntable
 	}
 
@@ -218,13 +221,120 @@ void FNStageLock(uintptr_t baseAddress, bool noFails) {
 		ChangeMemory(baseAddress, 0xCF, 0x16C3B);//5 Key Only and Radio Mix
 		ChangeMemory(baseAddress, 0xC6, 0x16A27);//5 key Standard (Street Mix)
 		ChangeMemory(baseAddress, 0xCE, 0x17707);//10 key (Club Mix)
-		//ChangeMemory(baseAddress, 0x0, 0x00);//14Key (Space Mix)
-		//ChangeMemory(baseAddress, 0x00, 0x00);//ez2Catch
+		ChangeMemory(baseAddress, 0xFF, 0x17927);//14Key (Space Mix)
+		ChangeMemory(baseAddress, 0xFF, 0x161C7);//ez2Catch
 		ChangeMemory(baseAddress, 0xCE, 0x17D3B);//Turntable
 	}
-	
-
 }
+
+//Expermental pfree like hack
+void NTStageLock(uintptr_t baseAddress) {
+
+	// will freese at stage 1 - You cant fail out of a song during this
+	if (GetPrivateProfileIntA("StageLock", "noFail", 0, ".\\2EZ.ini")) {
+
+		ChangeMemory(baseAddress, 0x00, 0x16D64);//5kOnly
+
+		ChangeMemory(baseAddress, 0x00, 0x16070);//5kStandard
+
+	}
+	//After 1st stage completed, will freese at stage 2, allowing you to fail out of a song
+	else { 
+		//5kOnly
+		ChangeMemory(baseAddress, 0x6A, 0x16D62);
+		ChangeMemory(baseAddress, 0x01, 0x16D63);
+		ChangeMemory(baseAddress, 0x5B, 0x16D64);
+		//ruby
+		ChangeMemory(baseAddress, 0x6A, 0x15dA2);
+		ChangeMemory(baseAddress, 0x01, 0x15dA3);
+		ChangeMemory(baseAddress, 0x5B, 0x15dA4);
+		//5kStandard
+		ChangeMemory(baseAddress, 0x6A, 0x1606E);
+		ChangeMemory(baseAddress, 0x01, 0x1606F);
+		ChangeMemory(baseAddress, 0x5B, 0x16070);
+		//7kStandard
+		ChangeMemory(baseAddress, 0x6A, 0x1630A);
+		ChangeMemory(baseAddress, 0x01, 0x1630B);
+		ChangeMemory(baseAddress, 0x5F, 0x1630C);
+		//10kManiac
+		ChangeMemory(baseAddress, 0x6A, 0x17012);
+		ChangeMemory(baseAddress, 0x01, 0x17013);
+		ChangeMemory(baseAddress, 0x5B, 0x17014);
+		//14kManiac
+		ChangeMemory(baseAddress, 0x6A, 0x172F9);
+		ChangeMemory(baseAddress, 0x01, 0x172FA);
+		ChangeMemory(baseAddress, 0x5B, 0x172FB);
+
+		//Ez2Catch
+		ChangeMemory(baseAddress, 0x6A, 0x1580D);
+		ChangeMemory(baseAddress, 0x01, 0x1580E);
+		ChangeMemory(baseAddress, 0x5B, 0x1580F);
+
+		//Turntable
+		ChangeMemory(baseAddress, 0x6A, 0x17897);
+		ChangeMemory(baseAddress, 0x01, 0x17898);
+		ChangeMemory(baseAddress, 0x5B, 0x17899);
+	}
+
+	if (GetPrivateProfileIntA("StageLock", "noGameOver", 0, ".\\2EZ.ini")) {
+		//5kOnly
+		ChangeMemory(baseAddress, 0x15, 0x16CDA);
+		//Ruby
+		ChangeMemory(baseAddress, 0x15, 0x15D08);
+		//5kStandard
+		ChangeMemory(baseAddress, 0x15, 0x15FE8);
+		//7kStandard
+		ChangeMemory(baseAddress, 0x15, 0x1625A);
+		ChangeMemory(baseAddress, 0x15, 0x162B1);
+		//10kManiac
+		ChangeMemory(baseAddress, 0x15, 0x16F8A);
+		//14Maniac
+		ChangeMemory(baseAddress, 0x15, 0x1725A);
+		//Ez2Catch
+		ChangeMemory(baseAddress, 0x15, 0x15777);
+		//Turntable
+		ChangeMemory(baseAddress, 0x15, 0x177E7);
+
+	}
+}
+
+void FNEXStageLock(uintptr_t baseAddress) {
+
+	if (GetPrivateProfileIntA("StageLock", "noFail", 0, ".\\2EZ.ini")) { // will freese at stage 1 - You cant fail out of a song during this
+
+		ChangeMemory(baseAddress, 0x3B, 0x16CC5);//5kOnly & Radio Mix
+		ChangeMemory(baseAddress, 0x3B, 0x167E5);//RubyMix
+		ChangeMemory(baseAddress, 0x3B, 0x16AAF);//5 key Standard (Street Mix)
+		ChangeMemory(baseAddress, 0x3B, 0x1779C);//10 key (Club Mix)
+		ChangeMemory(baseAddress, 0x3B, 0x17927);//14k
+		ChangeMemory(baseAddress, 0x00, 0x16205);//ez2Catch
+		ChangeMemory(baseAddress, 0x3B, 0x17DD5);//Turntable
+
+	}
+	else { //After 1st stage completed, will freese at stage 2, allowing you to fail out of a song
+
+		ChangeMemory(baseAddress, 0x8B, 0x16CC5);//5kOnly & Radio Mix
+		ChangeMemory(baseAddress, 0x8B, 0x167E5);//RubyMix
+		ChangeMemory(baseAddress, 0x8B, 0x16AAF);//5 key Standard (Street Mix)
+		ChangeMemory(baseAddress, 0x8B, 0x1779C);//10 key (Club Mix)
+		ChangeMemory(baseAddress, 0x8B, 0x17927);//14k
+		ChangeMemory(baseAddress, 0x6A, 0x16203);//ez2Catch
+		ChangeMemory(baseAddress, 0x01, 0x16204);
+		ChangeMemory(baseAddress, 0x5E, 0x16205);
+		ChangeMemory(baseAddress, 0x8B, 0x17DD5);//Turntable
+	}
+
+	if (GetPrivateProfileIntA("StageLock", "noGameOver", 0, ".\\2EZ.ini")) {
+
+		ChangeMemory(baseAddress, 0xC2, 0x16BEB);//5 Key Only and Radio Mix
+		//ChangeMemory(baseAddress, 0xC6, 0x16A27);//5 key Standard (Street Mix)
+		//ChangeMemory(baseAddress, 0xCE, 0x17707);//10 key (Club Mix)
+		//ChangeMemory(baseAddress, 0xFF, 0x17927);//14Key (Space Mix)
+		//ChangeMemory(baseAddress, 0xFF, 0x161C7);//ez2Catch
+		//ChangeMemory(baseAddress, 0xCE, 0x17D3B);//Turntable
+	}
+}
+
 
 
 
