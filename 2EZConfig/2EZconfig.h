@@ -61,12 +61,12 @@ namespace EZConfig {
     static const char* devButtons[] = { "dQuit", "dTest", "dService", "dCoin","dP1 Start", "dP2 Start", "dEffector 1",
                                  "dEffector 2", "dEffector 3", "dEffector 4","dP1 1", "dP1 2", "dP1 3", "dP1 4", "dP1 5",
                                  "dP1 TT+", "dP1 TT-","dP1 Pedal", "dP2 1", "dP2 2", "dP2 3", "dP2 4", "dP2 5",
-                                 "dP2 TT+", "dP2 TT-", "dP2 Pedal" };
+                                 "dP2 TT+", "dP2 TT-", "dP2 Pedal", "Screen Shot", "Auto Play"};
     //why?
     static const char* devButtonsDisplay[] = { "Quit", "Test", "Service", "Coin","P1 Start", "P2 Start", "Effector 1",
                                  "Effector 2", "Effector 3", "Effector 4","P1 1", "P1 2", "P1 3", "P1 4", "P1 5",
                                  "P1 TT+", "P1 TT - ","P1 Pedal", "P2 1", "P2 2", "P2 3", "P2 4", "P2 5",
-                                 "P2 TT + ", "P2 TT - ", "P2 Pedal" };
+                                 "P2 TT + ", "P2 TT - ", "P2 Pedal", "Screen Shot", "Auto Play" };
 
     static const char* ioButtons[] = {  "Test", 
                                         "Service", 
@@ -81,13 +81,18 @@ namespace EZConfig {
                                         "P1 3", 
                                         "P1 4", 
                                         "P1 5", 
-                                        "P1 Pedal",                      
+                                        "P1 TT+",
+                                        "P1 TT-",
+                                        "P1 Pedal",
                                         "P2 1", 
                                         "P2 2", 
                                         "P2 3", 
                                         "P2 4", 
                                         "P2 5", 
-                                        "P2 Pedal" };
+                                        "P2 TT+",
+                                        "P2 TT-",
+                                        "P2 Pedal",
+                                        };
 
     static const char* analogs[] = { "P1 Turntable", 
                                      "P2 Turntable" };

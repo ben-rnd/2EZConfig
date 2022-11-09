@@ -12,6 +12,8 @@ using namespace std;
 ioBinding buttonBindings[NUM_OF_IO];
 ioAnalogs analogBindings[NUM_OF_ANALOG];
 Joysticks joysticks[NUM_OF_JOYSTICKS];
+virtualTT vTT[2];
+
 
 UINT8 getButtonInput(int ionRangeStart) {
     UINT8 output = 255;
@@ -36,9 +38,9 @@ UINT8 getButtonInput(int ionRangeStart) {
 UINT8 getAnalogInput(int player) {
     if (analogBindings[player].bound){
         UINT8 ttRawVal = input::JoyAxisPos(analogBindings[player].joyID, analogBindings[player].axis);
-        return analogBindings[player].reverse ? ~ttRawVal : ttRawVal;
+        return (analogBindings[player].reverse ? ~ttRawVal : ttRawVal) + vTT[player].pos;
     }else{ 
-        return 255; 
+        return vTT[player].pos;
     }   
 }
 
@@ -174,6 +176,30 @@ LONG WINAPI IOportHandler(PEXCEPTION_POINTERS pExceptionInfo) {
     return EXCEPTION_CONTINUE_EXECUTION;
 }
 
+DWORD WINAPI virtualTTThread(void* data) {
+
+
+    while (true) {
+        
+        if (GetAsyncKeyState(vTT[0].plus) & 0x8000) {
+            vTT[0].pos += 1;
+        }
+        if (GetAsyncKeyState(vTT[0].minus) & 0x8000) {
+            vTT[0].pos -= 1;
+        }
+
+        if (GetAsyncKeyState(vTT[1].plus) & 0x8000) {
+            vTT[1].pos += 1;
+        }
+        if (GetAsyncKeyState(vTT[1].minus) & 0x8000) {
+            vTT[1].pos -= 1;
+        }
+        Sleep(5);
+    }
+
+    return 0;
+}
+
 DWORD PatchThread() {
 
     //Get Game config file
@@ -297,8 +323,16 @@ DWORD PatchThread() {
         }
         
     }
-    
 
+    vTT[0].plus = GetPrivateProfileIntA("P1 TT+", "Binding", NULL, ControliniPath);
+    vTT[0].minus = GetPrivateProfileIntA("P1 TT-", "Binding", NULL, ControliniPath);
+    vTT[1].plus = GetPrivateProfileIntA("P2 TT+", "Binding", NULL, ControliniPath);
+    vTT[1].plus = GetPrivateProfileIntA("P2 TT-", "Binding", NULL, ControliniPath);
+
+    HANDLE turntableThread = CreateThread(NULL, 0, virtualTTThread, NULL, 0, NULL);
+
+    
+    
     return NULL;
 }
 

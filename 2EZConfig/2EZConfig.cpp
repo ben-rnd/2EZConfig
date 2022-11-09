@@ -31,6 +31,7 @@ int detectGameVersion();
 
 LPSTR ControliniPath;
 
+
 int EZConfig::RenderUI(GLFWwindow* window) {
 
     static bool use_work_area = true;

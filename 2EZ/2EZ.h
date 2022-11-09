@@ -28,6 +28,12 @@ typedef struct IOAnalogs {
 	bool reverse = false;
 } ioAnalogs;
 
+typedef struct VirtualTT {
+	UINT8 pos = 255;
+	UINT8 plus = NULL;
+	UINT8 minus = NULL;
+} virtualTT;
+
 typedef struct JoySticks {
 	bool init = false;
 } Joysticks;
@@ -73,7 +79,7 @@ static struct djGame {
 const char* devButtons[] = { "dQuit", "dTest", "dService", "dCoin","dP1 Start", "dP2 Start", "dEffector 1", 
                              "dEffector 2", "dEffector 3", "dEffector 4","dP1 1", "dP1 2", "dP1 3", "dP1 4", "dP1 5", 
                              "dP1 TT+", "dP1 TT-","dP1 Pedal", "dP2 1", "dP2 2", "dP2 3", "dP2 4", "dP2 5",
-                             "dP2 TT+", "dP2 TT-", "dP2 Pedal" };
+                             "dP2 TT+", "dP2 TT-", "dP2 Pedal", "dScreenShot", "dAutoPlay"};
 
 const char* ioButtons[] = { "Test", "Service", "Effector 4", "Effector 3", "Effector 2", "Effector 1",
 						   "P2 Start", "P1 Start","P1 Pedal","QE", "QE", "P1 5", "P1 4", "P1 3", "P1 2", "P1 1",
