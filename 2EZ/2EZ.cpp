@@ -13,6 +13,9 @@ ioBinding buttonBindings[NUM_OF_IO];
 ioAnalogs analogBindings[NUM_OF_ANALOG];
 Joysticks joysticks[NUM_OF_JOYSTICKS];
 virtualTT vTT[2];
+uintptr_t baseAddress;
+int GameVer;
+djGame currGame;
 
 
 UINT8 getButtonInput(int ionRangeStart) {
@@ -200,14 +203,36 @@ DWORD WINAPI virtualTTThread(void* data) {
     return 0;
 }
 
+DWORD WINAPI alternateInputThread(void* data) {
+
+    if (strcmp(currGame.name, "Final:EX") == 0){
+        bool autoPlayButtonState = false;
+        uintptr_t fnexApOffset = 0x175F2E0;
+
+        while (true) {
+            if (GetAsyncKeyState(VK_F11) & 0x8000) {
+                if (!autoPlayButtonState) {
+                    autoPlayButtonState = true;
+                    ChangeMemory(baseAddress, 1 + (0 - (*reinterpret_cast<int*>(baseAddress + fnexApOffset))), fnexApOffset);
+                }
+            }
+            else if (autoPlayButtonState) {
+                autoPlayButtonState = false;
+            }
+        }
+    }
+
+    return 0;
+}
+
 DWORD PatchThread() {
 
     //Get Game config file
     LPCSTR config = ".\\2EZ.ini";
     HANDLE ez2Proc = GetCurrentProcess();
-    uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(NULL);
-    int GameVer = GetPrivateProfileIntA("Settings", "GameVer", 0, config);
-    djGame currGame = djGames[GameVer];
+    baseAddress = (uintptr_t)GetModuleHandleA(NULL);
+    GameVer = GetPrivateProfileIntA("Settings", "GameVer", 0, config);
+    currGame = djGames[GameVer];
 
 
     //Get Button Bindings config file
@@ -327,9 +352,10 @@ DWORD PatchThread() {
     vTT[0].plus = GetPrivateProfileIntA("P1 TT+", "Binding", NULL, ControliniPath);
     vTT[0].minus = GetPrivateProfileIntA("P1 TT-", "Binding", NULL, ControliniPath);
     vTT[1].plus = GetPrivateProfileIntA("P2 TT+", "Binding", NULL, ControliniPath);
-    vTT[1].plus = GetPrivateProfileIntA("P2 TT-", "Binding", NULL, ControliniPath);
+    vTT[1].minus = GetPrivateProfileIntA("P2 TT-", "Binding", NULL, ControliniPath);
 
     HANDLE turntableThread = CreateThread(NULL, 0, virtualTTThread, NULL, 0, NULL);
+    HANDLE inputThread = CreateThread(NULL, 0, alternateInputThread, NULL, 0, NULL);
 
     
     
