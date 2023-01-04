@@ -14,8 +14,10 @@ ioAnalogs analogBindings[NUM_OF_ANALOG];
 Joysticks joysticks[NUM_OF_JOYSTICKS];
 virtualTT vTT[2];
 uintptr_t baseAddress;
+uint8_t apKey;
 int GameVer;
 djGame currGame;
+LPCSTR config = ".\\2EZ.ini";
 
 
 UINT8 getButtonInput(int ionRangeStart) {
@@ -210,7 +212,7 @@ DWORD WINAPI alternateInputThread(void* data) {
         uintptr_t fnexApOffset = 0x175F2E0;
 
         while (true) {
-            if (GetAsyncKeyState(VK_F11) & 0x8000) {
+            if (GetAsyncKeyState(apKey) & 0x8000) {
                 if (!autoPlayButtonState) {
                     autoPlayButtonState = true;
                     ChangeMemory(baseAddress, 1 + (0 - (*reinterpret_cast<int*>(baseAddress + fnexApOffset))), fnexApOffset);
@@ -222,23 +224,88 @@ DWORD WINAPI alternateInputThread(void* data) {
         }
     }
 
+    if (strcmp(currGame.name, "Final") == 0) {
+        bool autoPlayButtonState = false;
+        uintptr_t apOffset = 0x175E290;
+
+        while (true) {
+            if (GetAsyncKeyState(apKey) & 0x8000) {
+                if (!autoPlayButtonState) {
+                    autoPlayButtonState = true;
+                    ChangeMemory(baseAddress, 1 + (0 - (*reinterpret_cast<int*>(baseAddress + apOffset))), apOffset);
+                }
+            }
+            else if (autoPlayButtonState) {
+                autoPlayButtonState = false;
+            }
+        }
+    }
+
+    if (strcmp(currGame.name, "Night Traveller") == 0) {
+        bool autoPlayButtonState = false;
+        uintptr_t apOffset = 0x1360EA4;
+
+        while (true) {
+            if (GetAsyncKeyState(apKey) & 0x8000) {
+                if (!autoPlayButtonState) {
+                    autoPlayButtonState = true;
+                    ChangeMemory(baseAddress, 1 + (0 - (*reinterpret_cast<int*>(baseAddress + apOffset))), apOffset);
+                }
+            }
+            else if (autoPlayButtonState) {
+                autoPlayButtonState = false;
+            }
+        }
+    }
+
+    if (strcmp(currGame.name, "Endless Circulation") == 0) {
+        bool autoPlayButtonState = false;
+        uintptr_t apOffset = 0xEF606C;
+
+        while (true) {
+            if (GetAsyncKeyState(apKey) & 0x8000) {
+                if (!autoPlayButtonState) {
+                    autoPlayButtonState = true;
+                    ChangeMemory(baseAddress, 1 + (0 - (*reinterpret_cast<int*>(baseAddress + apOffset))), apOffset);
+                }
+            }
+            else if (autoPlayButtonState) {
+                autoPlayButtonState = false;
+            }
+        }
+    }
+
     return 0;
+}
+
+void patchName() {
+
+    //Set version text in test menu
+    char newName[] = "EZ2AC_FN";
+    GetPrivateProfileStringA("Settings", "nameOverride", "COCK", newName, 8, config);
+    char pattern[] = "EZ2AC_FN";
+    DWORD nameOffset = FindPattern(pattern);
+    unsigned long OldProtection;
+    VirtualProtect((LPVOID)(nameOffset), sizeof(newName), PAGE_EXECUTE_READWRITE, &OldProtection);
+    CopyMemory((void*)(nameOffset), &newName, sizeof(newName));
+    VirtualProtect((LPVOID)(nameOffset), sizeof(newName), OldProtection, NULL);
+
 }
 
 DWORD PatchThread() {
 
     //Get Game config file
-    LPCSTR config = ".\\2EZ.ini";
     HANDLE ez2Proc = GetCurrentProcess();
     baseAddress = (uintptr_t)GetModuleHandleA(NULL);
     GameVer = GetPrivateProfileIntA("Settings", "GameVer", 0, config);
     currGame = djGames[GameVer];
-
-
+    
     //Get Button Bindings config file
     char ControliniPath[MAX_PATH];
     SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, ControliniPath);
     PathAppendA(ControliniPath, (char*)"2EZ.ini");
+
+    patchName();
     
     //Short sleep to fix crash when using legitimate data with dongle, can be overrden in ini if causing issues.
     Sleep(GetPrivateProfileIntA("Settings", "ShimDelay", 10, config));
@@ -253,6 +320,17 @@ DWORD PatchThread() {
     if (GetPrivateProfileIntA("Settings", "EnableIOHook", 0, config)) {
         SetUnhandledExceptionFilter(IOportHandler);
     }
+
+
+    //Set version text in test menu
+    char pattern[] = "Version %d.%02d";
+    DWORD versionText = FindPattern(pattern);
+    char newText[] = "2EZConfig 1.03";
+    unsigned long OldProtection;
+    VirtualProtect((LPVOID)(versionText), sizeof(newText), PAGE_EXECUTE_READWRITE, &OldProtection);
+    CopyMemory((void*)(versionText), &newText, sizeof(newText));
+    VirtualProtect((LPVOID)(versionText), sizeof(newText), OldProtection, NULL);
+
 
 
     //Setup Buttons
@@ -294,6 +372,9 @@ DWORD PatchThread() {
         }
     }
     
+    //auto play key
+    apKey =  GetPrivateProfileIntA("Autoplay", "Binding", VK_F11, ControliniPath);
+
     ///PATCHING SECTION
 
 

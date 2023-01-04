@@ -66,7 +66,7 @@ namespace EZConfig {
     static const char* devButtonsDisplay[] = { "Quit", "Test", "Service", "Coin","P1 Start", "P2 Start", "Effector 1",
                                  "Effector 2", "Effector 3", "Effector 4","P1 1", "P1 2", "P1 3", "P1 4", "P1 5",
                                  "P1 TT+", "P1 TT - ","P1 Pedal", "P2 1", "P2 2", "P2 3", "P2 4", "P2 5",
-                                 "P2 TT + ", "P2 TT - ", "P2 Pedal", "Screen Shot", "Auto Play" };
+                                 "P2 TT + ", "P2 TT - ", "P2 Pedal" };
 
     static const char* ioButtons[] = {  "Test", 
                                         "Service", 

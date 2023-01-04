@@ -15,7 +15,7 @@
 #pragma comment(lib, "legacy_stdio_definitions")
 #endif
 
-#define version "v1.02"
+#define version "v1.03 - Dev"
 
 void setTheme();
 

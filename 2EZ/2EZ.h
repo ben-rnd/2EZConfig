@@ -341,6 +341,30 @@ void FNEXStageLock(uintptr_t baseAddress) {
 	}
 }
 
+DWORD FindPattern(char* pattern)
+{
+
+	HMODULE hModule = GetModuleHandle(NULL);
+
+	MODULEINFO mInfo; GetModuleInformation(GetCurrentProcess(), hModule, &mInfo, sizeof(MODULEINFO));
+	DWORD base = (DWORD)mInfo.lpBaseOfDll;
+	DWORD size = (DWORD)mInfo.SizeOfImage;
+	DWORD patternLength = (DWORD)strlen(pattern);
+	for (DWORD i = 0; i < size - patternLength; i++)
+	{
+		bool found = true;
+		for (DWORD j = 0; j < patternLength; j++)
+		{
+			found &= pattern[j] == '?' || pattern[j] == *(char*)(base + i + j);
+		}
+		if (found)
+		{
+			return base + i;
+		}
+	}
+	return NULL;
+
+}
 
 
 

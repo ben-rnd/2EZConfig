@@ -584,6 +584,74 @@ void buttonsWindow() {
     ImGui::Separator();
 
 
+    //BEGIN Cheeky Extras
+    ImGui::Text("Toggles (Keyboard Only)");
+    ImGui::TextColored(ImVec4(1, 0, 0, 1), "Useable on FNEX, Final, NT, and EC");
+    ImGui::Columns(3, "buttons");
+    ImGui::Separator();
+
+    char method[20];
+    GetPrivateProfileString("Autoplay", "Method", "", method, sizeof(method), ControliniPath);
+    int id = GetPrivateProfileIntA("Autoplay", "JoyID", NULL, ControliniPath);
+    int binding = GetPrivateProfileIntA("Autoplay", "Binding", NULL, ControliniPath);
+    if (binding != NULL) {
+        if (GetAsyncKeyState(binding) & 0x8000) {
+            ImGui::TextColored(ImVec4(1, 0.7f, 0, 1), "Autoplay");
+
+        }
+        else {
+            ImGui::Text("Autoplay");
+        }
+        ImGui::NextColumn();
+        ImGui::Text("%s:%s", method, GetKeyName(binding).c_str());
+    }
+    else {
+        ImGui::Text("Autoplay");
+        ImGui::NextColumn();
+        ImGui::BeginDisabled();
+        ImGui::Text("None");
+        ImGui::EndDisabled();
+    }
+
+
+    //BINDING CODE THIS IS SHIT I HATE IT
+    ImGui::NextColumn();
+    char buttonLabel[20];
+    sprintf(buttonLabel, "Bind##%d", 12 + 100);
+    if (ImGui::Button(buttonLabel))
+        ImGui::OpenPopup("Autoplay");
+    if (ImGui::BeginPopupModal("Autoplay", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Press a button to bind it");
+        if (ImGui::Button("Close")) {
+            ImGui::CloseCurrentPopup();
+        }
+        else {
+            // grab current keyboard state
+            int key = input::checkKbPressedState();
+            if (key > 0) {
+                WritePrivateProfileString("Autoplay", "Method", "Key", ControliniPath);
+                WritePrivateProfileString("Autoplay", "JoyID", NULL, ControliniPath);
+                WritePrivateProfileString("Autoplay", "Binding", _itoa(key, buff, sizeof(buff)), ControliniPath);
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndPopup();
+        //PLEASE SOMEONE REPLCE IT WITH RAWINPUT OF SOMETHING
+    }
+
+    if (binding != NULL) {
+        //Clear Binding
+        ImGui::SameLine();
+        sprintf(buttonLabel, "Clear##%d", "Autoplay" + 100);
+        if (ImGui::Button(buttonLabel)) {
+            WritePrivateProfileString("Autoplay", NULL, NULL, ControliniPath);
+        }
+    }
+
+    ImGui::Columns(1);
+    ImGui::Separator();
+
 
     //BEGIN DEV BINDING
     ImGui::Text("Dev Input (Keyboard Only)");
