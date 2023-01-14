@@ -278,20 +278,6 @@ DWORD WINAPI alternateInputThread(void* data) {
     return 0;
 }
 
-void patchName() {
-
-    //Set version text in test menu
-    char newName[] = "EZ2AC_FN";
-    GetPrivateProfileStringA("Settings", "nameOverride", "COCK", newName, 8, config);
-    char pattern[] = "EZ2AC_FN";
-    DWORD nameOffset = FindPattern(pattern);
-    unsigned long OldProtection;
-    VirtualProtect((LPVOID)(nameOffset), sizeof(newName), PAGE_EXECUTE_READWRITE, &OldProtection);
-    CopyMemory((void*)(nameOffset), &newName, sizeof(newName));
-    VirtualProtect((LPVOID)(nameOffset), sizeof(newName), OldProtection, NULL);
-
-}
-
 DWORD PatchThread() {
 
     //Get Game config file
@@ -305,7 +291,6 @@ DWORD PatchThread() {
     SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, ControliniPath);
     PathAppendA(ControliniPath, (char*)"2EZ.ini");
 
-    patchName();
     
     //Short sleep to fix crash when using legitimate data with dongle, can be overrden in ini if causing issues.
     Sleep(GetPrivateProfileIntA("Settings", "ShimDelay", 10, config));
@@ -320,17 +305,6 @@ DWORD PatchThread() {
     if (GetPrivateProfileIntA("Settings", "EnableIOHook", 0, config)) {
         SetUnhandledExceptionFilter(IOportHandler);
     }
-
-
-    //Set version text in test menu
-    char pattern[] = "Version %d.%02d";
-    DWORD versionText = FindPattern(pattern);
-    char newText[] = "2EZConfig 1.03";
-    unsigned long OldProtection;
-    VirtualProtect((LPVOID)(versionText), sizeof(newText), PAGE_EXECUTE_READWRITE, &OldProtection);
-    CopyMemory((void*)(versionText), &newText, sizeof(newText));
-    VirtualProtect((LPVOID)(versionText), sizeof(newText), OldProtection, NULL);
-
 
 
     //Setup Buttons
@@ -382,6 +356,16 @@ DWORD PatchThread() {
     //Doesnt cause any issues so i just set this globally on all games, can be overidden in .ini if needed.
     //since we're already hooking IO theres no problem doing this.
     Sleep(GetPrivateProfileIntA("Settings", "BindDelay", 2000, config));
+
+    //Set version text in test menu
+    char pattern[] = "Version %d.%02d";
+    DWORD versionText = FindPattern(pattern);
+    char newText[] = "2EZConfig 1.03";
+    unsigned long OldProtection;
+    VirtualProtect((LPVOID)(versionText), sizeof(newText), PAGE_EXECUTE_READWRITE, &OldProtection);
+    CopyMemory((void*)(versionText), &newText, sizeof(newText));
+    VirtualProtect((LPVOID)(versionText), sizeof(newText), OldProtection, NULL);
+
 
     if (strcmp(currGame.name, "Evolve") == 0 && GetPrivateProfileIntA("Settings", "EvWin10Fix", 0, config)) {
         NOPMemory(baseAddress, 0x11757);
