@@ -40,7 +40,7 @@ Requires the Visual studio 2015 - Windows XP(v140_XP) Platform toolset.
 ## Help! The game looks ugly!
 EZ2 was built to run on win98 (and later windows xp), so you can expect to come across some pretty ugly graphic issues.
 
-Here are some software that can make the game look must nicer on windows 10
+Here are some software that can make the game look much nicer on windows 10
 - DDrawCompat (https://github.com/narzoul/DDrawCompat/releases)
 - dgVoodoo (http://dege.freeweb.hu/dgVoodoo2/dgVoodoo2/)
   
