@@ -37,6 +37,14 @@ Requires the Visual studio 2015 - Windows XP(v140_XP) Platform toolset.
 - EZ2Dancer support - IOhooking done, just need to RE the button mappings on ports and create config interface for it (kind of done, check out the ez2dancer branch)
 - Increase library of game patches
 
+##Help! The game looks ugly!
+EZ2 was built to run on win98 (and later windows xp), so you can expect to come across some pretty ugly graphic issues.
+
+Here are some software that can make the game look must nicer on windows 10
+- DDrawCompat (https://github.com/narzoul/DDrawCompat/releases)
+- dgVoodoo (http://dege.freeweb.hu/dgVoodoo2/dgVoodoo2/)
+If i find anything else that improves compatibilty ill update this list
+
 ## Contact
 
 Please feel free to contact me on sows (IYKYK)
