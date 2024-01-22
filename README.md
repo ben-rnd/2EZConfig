@@ -33,7 +33,7 @@ Requires the Visual studio 2015 - Windows XP(v140_XP) Platform toolset.
 ## Roadmap
 - HID Input, support for various input device (eg.MIDI)
 - HID Lighting out
-- EZ2Dancer support - IOhooking done, just need to RE the button mappings on ports and create config interface for it 
+- EZ2Dancer support - IOhooking done, just need to RE the button mappings on ports and create config interface for it (kind of done, check out the ez2dancer branch)
 - Increase library of game patches
 
 ## Contact
