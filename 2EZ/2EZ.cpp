@@ -12,6 +12,13 @@ using namespace std;
 ioBinding buttonBindings[NUM_OF_IO];
 ioAnalogs analogBindings[NUM_OF_ANALOG];
 Joysticks joysticks[NUM_OF_JOYSTICKS];
+virtualTT vTT[2];
+uintptr_t baseAddress;
+uint8_t apKey;
+int GameVer;
+djGame currGame;
+LPCSTR config = ".\\2EZ.ini";
+
 
 UINT8 getButtonInput(int ionRangeStart) {
     UINT8 output = 255;
@@ -36,9 +43,9 @@ UINT8 getButtonInput(int ionRangeStart) {
 UINT8 getAnalogInput(int player) {
     if (analogBindings[player].bound){
         UINT8 ttRawVal = input::JoyAxisPos(analogBindings[player].joyID, analogBindings[player].axis);
-        return analogBindings[player].reverse ? ~ttRawVal : ttRawVal;
+        return (analogBindings[player].reverse ? ~ttRawVal : ttRawVal) + vTT[player].pos;
     }else{ 
-        return 255; 
+        return vTT[player].pos;
     }   
 }
 
@@ -174,18 +181,125 @@ LONG WINAPI IOportHandler(PEXCEPTION_POINTERS pExceptionInfo) {
     return EXCEPTION_CONTINUE_EXECUTION;
 }
 
+DWORD WINAPI virtualTTThread(void* data) {
+
+
+    while (true) {
+        
+        if (GetAsyncKeyState(vTT[0].plus) & 0x8000) {
+            vTT[0].pos += 1;
+        }
+        if (GetAsyncKeyState(vTT[0].minus) & 0x8000) {
+            vTT[0].pos -= 1;
+        }
+
+        if (GetAsyncKeyState(vTT[1].plus) & 0x8000) {
+            vTT[1].pos += 1;
+        }
+        if (GetAsyncKeyState(vTT[1].minus) & 0x8000) {
+            vTT[1].pos -= 1;
+        }
+        Sleep(5);
+    }
+
+    return 0;
+}
+
+DWORD WINAPI alternateInputThread(void* data) {
+
+    if (strcmp(currGame.name, "Final:EX") == 0){
+        bool autoPlayButtonState = false;
+        uintptr_t fnexApOffset = 0x175F2E0;
+
+        while (true) {
+            if (GetAsyncKeyState(apKey) & 0x8000) {
+                if (!autoPlayButtonState) {
+                    autoPlayButtonState = true;
+                    ChangeMemory(baseAddress, 1 + (0 - (*reinterpret_cast<int*>(baseAddress + fnexApOffset))), fnexApOffset);
+                }
+            }
+            else if (autoPlayButtonState) {
+                autoPlayButtonState = false;
+            }
+        }
+    }
+
+    if (strcmp(currGame.name, "Final") == 0) {
+        bool autoPlayButtonState = false;
+        uintptr_t apOffset = 0x175E290;
+
+        while (true) {
+            if (GetAsyncKeyState(apKey) & 0x8000) {
+                if (!autoPlayButtonState) {
+                    autoPlayButtonState = true;
+                    ChangeMemory(baseAddress, 1 + (0 - (*reinterpret_cast<int*>(baseAddress + apOffset))), apOffset);
+                }
+            }
+            else if (autoPlayButtonState) {
+                autoPlayButtonState = false;
+            }
+        }
+    }
+
+    if (strcmp(currGame.name, "Night Traveller") == 0) {
+        bool autoPlayButtonState = false;
+        uintptr_t apOffset = 0x1360EA4;
+
+        while (true) {
+            if (GetAsyncKeyState(apKey) & 0x8000) {
+                if (!autoPlayButtonState) {
+                    autoPlayButtonState = true;
+                    ChangeMemory(baseAddress, 1 + (0 - (*reinterpret_cast<int*>(baseAddress + apOffset))), apOffset);
+                }
+            }
+            else if (autoPlayButtonState) {
+                autoPlayButtonState = false;
+            }
+        }
+    }
+
+    if (strcmp(currGame.name, "Endless Circulation") == 0) {
+        bool autoPlayButtonState = false;
+        uintptr_t apOffset = 0xEF606C;
+
+        while (true) {
+            if (GetAsyncKeyState(apKey) & 0x8000) {
+                if (!autoPlayButtonState) {
+                    autoPlayButtonState = true;
+                    ChangeMemory(baseAddress, 1 + (0 - (*reinterpret_cast<int*>(baseAddress + apOffset))), apOffset);
+                }
+            }
+            else if (autoPlayButtonState) {
+                autoPlayButtonState = false;
+            }
+        }
+    }
+
+    return 0;
+}
+
 DWORD PatchThread() {
 
     //Get Game config file
-    LPCSTR config = ".\\2EZ.ini";
-
+    HANDLE ez2Proc = GetCurrentProcess();
+    baseAddress = (uintptr_t)GetModuleHandleA(NULL);
+    GameVer = GetPrivateProfileIntA("Settings", "GameVer", 0, config);
+    currGame = djGames[GameVer];
+    
     //Get Button Bindings config file
     char ControliniPath[MAX_PATH];
     SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, ControliniPath);
     PathAppendA(ControliniPath, (char*)"2EZ.ini");
+
     
     //Short sleep to fix crash when using legitimate data with dongle, can be overrden in ini if causing issues.
     Sleep(GetPrivateProfileIntA("Settings", "ShimDelay", 10, config));
+
+
+    //re-enable keyboard if playing FNEX - do this before any delays
+    if (strcmp(currGame.name, "Final:EX") == 0) {
+        zeroMemory(baseAddress, 0x15D51);
+    }
 
     //Hook IO 
     if (GetPrivateProfileIntA("Settings", "EnableIOHook", 0, config)) {
@@ -232,19 +346,34 @@ DWORD PatchThread() {
         }
     }
     
+    //auto play key
+    apKey =  GetPrivateProfileIntA("Autoplay", "Binding", VK_F11, ControliniPath);
+
     ///PATCHING SECTION
-    
+
+
     //Some of the games (ie final) take a while to initialise and will crash or clear out the bindings unless delayed
     //Doesnt cause any issues so i just set this globally on all games, can be overidden in .ini if needed.
     //since we're already hooking IO theres no problem doing this.
     Sleep(GetPrivateProfileIntA("Settings", "BindDelay", 2000, config));
 
-    HANDLE ez2Proc = GetCurrentProcess();
-    uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(NULL);
-    int GameVer = GetPrivateProfileIntA("Settings", "GameVer", 0, config);
-    djGame currGame = djGames[GameVer];
+    //Set version text in test menu
+    char pattern[] = "Version %d.%02d";
+    DWORD versionText = FindPattern(pattern);
+    char newText[] = "2EZConfig 1.03";
+    unsigned long OldProtection;
+    VirtualProtect((LPVOID)(versionText), sizeof(newText), PAGE_EXECUTE_READWRITE, &OldProtection);
+    CopyMemory((void*)(versionText), &newText, sizeof(newText));
+    VirtualProtect((LPVOID)(versionText), sizeof(newText), OldProtection, NULL);
 
 
+    if (strcmp(currGame.name, "Evolve") == 0 && GetPrivateProfileIntA("Settings", "EvWin10Fix", 0, config)) {
+        NOPMemory(baseAddress, 0x11757);
+        NOPMemory(baseAddress, 0x11758);
+        NOPMemory(baseAddress, 0x11759);
+        NOPMemory(baseAddress, 0x11770);
+        NOPMemory(baseAddress, 0x11771);
+    }
     //Sometimes GetModuleHandleA wasnt working?
     //set to the known base address offset
     //This has never not worked but I dont want to rely on it
@@ -265,11 +394,36 @@ DWORD PatchThread() {
     }
 
     //FINAL save settings patch
-    if (strcmp(currGame.name, "Final") == 0 && GetPrivateProfileIntA("Settings", "KeepSettings", 0, config)) {
+    if (strcmp(currGame.name, "Final") == 0 && GetPrivateProfileIntA("KeepSettings", "Enabled", 0, config)) {
             FnKeepSettings(baseAddress);
     }
-    
 
+    if (GetPrivateProfileIntA("StageLock", "Enabled", 0, config)) {
+        
+        if (strcmp(currGame.name, "Final") == 0) {
+            FNStageLock(baseAddress);
+        }
+
+        if (strcmp(currGame.name, "Night Traveller") == 0) {
+            NTStageLock(baseAddress);
+        }
+
+        if (strcmp(currGame.name, "Final:EX") == 0) {
+            FNEXStageLock(baseAddress);
+        }
+        
+    }
+
+    vTT[0].plus = GetPrivateProfileIntA("P1 TT+", "Binding", NULL, ControliniPath);
+    vTT[0].minus = GetPrivateProfileIntA("P1 TT-", "Binding", NULL, ControliniPath);
+    vTT[1].plus = GetPrivateProfileIntA("P2 TT+", "Binding", NULL, ControliniPath);
+    vTT[1].minus = GetPrivateProfileIntA("P2 TT-", "Binding", NULL, ControliniPath);
+
+    HANDLE turntableThread = CreateThread(NULL, 0, virtualTTThread, NULL, 0, NULL);
+    HANDLE inputThread = CreateThread(NULL, 0, alternateInputThread, NULL, 0, NULL);
+
+    
+    
     return NULL;
 }
 

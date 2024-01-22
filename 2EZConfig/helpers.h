@@ -5,6 +5,8 @@
 #include <io.h>
 #include <TlHelp32.h>
 #include <comdef.h> 
+//externals
+#include <openssl/md5.h>
 
 
 
@@ -48,6 +50,7 @@ inline int fileExists(const char* filename) {
 
     return 0;
 }
+
 
 // maximum mumber of lines the output console should have
 static const WORD MAX_CONSOLE_LINES = 500;
@@ -144,6 +147,26 @@ inline std::string GetKeyName(unsigned int virtualKey)
         return "[Error]";
     }
 }
+
+inline void WritePrivateProfileInt(LPCSTR settingName, LPCSTR settingKey, int settingValue, LPCSTR fileName) {
+    char buff[10];
+    WritePrivateProfileString(settingName, settingKey, _itoa(settingValue, buff, sizeof(buff)), fileName);
+}
+
+inline char* toLower(char* s) {
+    for (char* p = s; *p; p++) *p = tolower(*p);
+    return s;
+}
+
+inline bool hasEnding(std::string const& fullString, std::string const& ending) {
+    if (fullString.length() >= ending.length()) {
+        return (0 == fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
+    }
+    else {
+        return false;
+    }
+}
+
 
 
 

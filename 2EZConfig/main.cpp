@@ -15,6 +15,8 @@
 #pragma comment(lib, "legacy_stdio_definitions")
 #endif
 
+#define version "v1.03 - Dev"
+
 void setTheme();
 
 
@@ -53,7 +55,7 @@ int main(int argc, char* argv[])
     if (!glfwInit())
         return 1;
 
-    GLFWwindow* window = glfwCreateWindow(420, 450, "2EZ Config", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(420, 450, "2EZConfig " version, NULL, NULL);
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window);

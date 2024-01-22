@@ -5,6 +5,19 @@ This is a tool designed to enable USB controllers to work with all versions of E
 
 The tool was initally a small personal project that was hacked together in a few nights after frustration when playing EC with joy2key, it was released due to the attention that EZ2 had been gaining with the public release of final, so i apologise in advance for some awful programming. Now that its open source please feel free to improve it! :D
 
+## Current Compatibility and Features
+
+All EZ2DJ/AC games support this method of IO input emulation.
+
+### Patches 
+All Patches are applied after launching the game the game, and make no modification to original files.
+#### Endless Circulation -> FNEX
+- Enable and bind deveveloper inputs.
+- Timer freeze patches
+#### FN
+- "Keep Settings" patch. An experimental patch that persists your game settings set between credits - Only stable when playing 5k and 7k Standard.
+	
+
 ## Get Involved!
 Very open to contributions or suggestions, so please get involved to improve the tool :). 
 ### Current Priority

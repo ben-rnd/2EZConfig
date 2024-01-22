@@ -6,6 +6,7 @@
 #include "helpers.h"
 #include "inputManager/device.h"
 #include "inputManager/input.h"
+#include <dirent.h>
 
 //externals
 #include <openssl/md5.h>
@@ -19,7 +20,7 @@
 #include <ShlObj.h>
 #include <Shlwapi.h>
 
-using namespace std;
+
 using namespace EZConfig;
 
 void settingsWindow();
@@ -29,6 +30,7 @@ void HelpMarker(const char* desc);
 int detectGameVersion();
 
 LPSTR ControliniPath;
+
 
 int EZConfig::RenderUI(GLFWwindow* window) {
 
@@ -44,7 +46,7 @@ int EZConfig::RenderUI(GLFWwindow* window) {
     char exeName[255];
     GetPrivateProfileStringA("Settings", "EXEName", "EZ2AC.exe", exeName, sizeof(exeName), ConfigIniPath);
 
-    if (ImGui::Begin("Example: Fullscreen window", (bool*)true, flags))
+    if (ImGui::Begin("Menu", (bool*)true, flags))
     {
         ImGui::Text("R U READY 2 GO INSIDA DJ BOX?");
         ImGui::SameLine(ImGui::GetWindowWidth() - 80);
@@ -131,7 +133,7 @@ int EZConfig::sixthBackgroundLoop(char* launcherName) {
     //and the hook will conflict if they are both the same
     printf("lauching 6th loop\n");
     Injector::Inject(launcherName);
-    while (isProcessOpen(launcherName) ){
+    while (true){
         //both these names should never changes, the 6th trax launcher exe requires these names to function
         if (!inSixth) {
             if (Injector::InjectWithName("EZ2DJ6th.exe")) {
@@ -142,7 +144,7 @@ int EZConfig::sixthBackgroundLoop(char* launcherName) {
         }
         else {
             if (Injector::InjectWithName("Ez2DJ.exe")) {
-                Injector::InjectWithName(launcherName);
+                //Injector::InjectWithName(launcherName);
                 inSixth = false;
                 printf("Found 1st\n");
             }
@@ -159,7 +161,6 @@ void settingsWindow() {
     char buff[30];
     char exeName[255];
 
-
     //Get game version currently set, if not set try to detect game
     int GameVer = GetPrivateProfileIntA("Settings", "GameVer", -1, ConfigIniPath);
     if (GameVer < 0 ) {
@@ -174,8 +175,16 @@ void settingsWindow() {
     bool modeFreeze = GetPrivateProfileIntA("Settings", "ModeSelectTimerFreeze", 0, ConfigIniPath);
     bool songFreeze = GetPrivateProfileIntA("Settings", "SongSelectTimerFreeze", 0, ConfigIniPath);
 
+    // EVOLVE settings
+    bool evWin10Fix = GetPrivateProfileIntA("Settings", "EvWin10Fix", 0, ConfigIniPath);
+
+    //Stage Lock Settings
+    bool stageLock = GetPrivateProfileIntA("StageLock", "Enabled", 0, ConfigIniPath);
+    bool noGameOver = GetPrivateProfileIntA("StageLock", "noGameOver", 1, ConfigIniPath);
+    bool noFail = GetPrivateProfileIntA("StageLock", "noFail", 0, ConfigIniPath);
+
     //Setting Save Patch for final, wont bother with this again for any other games
-    bool saveSettings = GetPrivateProfileIntA("Settings", "KeepSettings", 0, ConfigIniPath);
+    bool saveSettings = GetPrivateProfileIntA("KeepSettings", "Enabled", 0, ConfigIniPath);
     bool random = GetPrivateProfileIntA("KeepSettings", "Random", 1, ConfigIniPath);
     bool note = GetPrivateProfileIntA("KeepSettings", "Note", 1, ConfigIniPath);
     bool autoScratchPedal = GetPrivateProfileIntA("KeepSettings", "Auto", 1, ConfigIniPath);
@@ -272,6 +281,43 @@ void settingsWindow() {
         WritePrivateProfileString("Settings", "SongSelectTimerFreeze", _itoa(songFreeze, buff, 10), ConfigIniPath);
     }
 
+    if (strcmp(djGames[GameVer].name, "Evolve") == 0) {
+        ImGui::Checkbox("Evolve Win10 Fix", &evWin10Fix);
+        ImGui::SameLine();
+        HelpMarker("Fix for the crash after the warning screen.");
+        WritePrivateProfileString("Settings", "EvWin10Fix", _itoa(evWin10Fix, buff, 10), ConfigIniPath);
+    }
+
+    if (djGames[GameVer].hasSaveSettings || djGames[GameVer].hasStageLock) {
+        ImGui::Separator();
+        ImGui::Text("Experimental");
+        ImGui::SameLine();
+        HelpMarker("These patches arent thourougly tested and may cause your game to crash.");
+    }
+
+    if (djGames[GameVer].hasStageLock) {
+        ImGui::Checkbox("Enable Stage Lock", &stageLock);
+        ImGui::SameLine();
+        HelpMarker("A 'Premium Free' like patch that will stop the credit ending after the 3rd song. You can exit out to title screen by pressing escape to quit your current session.\
+                        By default you are locked to Stage 2 after completing the first stage. ");
+        WritePrivateProfileString("StageLock", "Enabled", _itoa(stageLock, buff, 10), ConfigIniPath);
+
+        if (stageLock) {
+            ImGui::Indent(16.0f);
+
+            ImGui::Checkbox("No Game Over", &noGameOver);
+            WritePrivateProfileString("StageLock", "noGameOver", _itoa(noGameOver, buff, 10), ConfigIniPath);
+            ImGui::SameLine();
+            HelpMarker("Failing a song will never result in a game over.");
+        
+            ImGui::Checkbox("No Fail out", &noFail);
+            WritePrivateProfileString("StageLock", "noFail", _itoa(noFail, buff, 10), ConfigIniPath);
+            ImGui::SameLine();
+            HelpMarker("You will be locked to Stage 1, where you cannot fail out of a song.");
+
+            ImGui::Unindent(16.0f);
+        }
+    }
 
     //Final specific save settings options
     //I cant be bothered adapting this to other game versions. Its fairly unstabkle anyway.
@@ -279,7 +325,7 @@ void settingsWindow() {
         ImGui::Checkbox("Keep Settings Between Credits", &saveSettings);
         ImGui::SameLine();
         HelpMarker("Settings will not be reset at the end of a credit on standard modes");
-        WritePrivateProfileString("Settings", "KeepSettings", _itoa(saveSettings, buff, 10), ConfigIniPath);
+        WritePrivateProfileString("KeepSettings", "Enabled", _itoa(saveSettings, buff, 10), ConfigIniPath);
 
         if (saveSettings) {
             ImGui::TextColored(ImVec4(1, 0, 0, 1), "Cannot guarantee compatibility with 5key Only, Ruby,");
@@ -537,6 +583,74 @@ void buttonsWindow() {
     ImGui::Columns(1);
     ImGui::Separator();
 
+
+    //BEGIN Cheeky Extras
+    ImGui::Text("Toggles (Keyboard Only)");
+    ImGui::TextColored(ImVec4(1, 0, 0, 1), "Useable on FNEX, Final, NT, and EC");
+    ImGui::Columns(3, "buttons");
+    ImGui::Separator();
+
+    char method[20];
+    GetPrivateProfileString("Autoplay", "Method", "", method, sizeof(method), ControliniPath);
+    int id = GetPrivateProfileIntA("Autoplay", "JoyID", NULL, ControliniPath);
+    int binding = GetPrivateProfileIntA("Autoplay", "Binding", NULL, ControliniPath);
+    if (binding != NULL) {
+        if (GetAsyncKeyState(binding) & 0x8000) {
+            ImGui::TextColored(ImVec4(1, 0.7f, 0, 1), "Autoplay");
+
+        }
+        else {
+            ImGui::Text("Autoplay");
+        }
+        ImGui::NextColumn();
+        ImGui::Text("%s:%s", method, GetKeyName(binding).c_str());
+    }
+    else {
+        ImGui::Text("Autoplay");
+        ImGui::NextColumn();
+        ImGui::BeginDisabled();
+        ImGui::Text("None");
+        ImGui::EndDisabled();
+    }
+
+
+    //BINDING CODE THIS IS SHIT I HATE IT
+    ImGui::NextColumn();
+    char buttonLabel[20];
+    sprintf(buttonLabel, "Bind##%d", 12 + 100);
+    if (ImGui::Button(buttonLabel))
+        ImGui::OpenPopup("Autoplay");
+    if (ImGui::BeginPopupModal("Autoplay", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Press a button to bind it");
+        if (ImGui::Button("Close")) {
+            ImGui::CloseCurrentPopup();
+        }
+        else {
+            // grab current keyboard state
+            int key = input::checkKbPressedState();
+            if (key > 0) {
+                WritePrivateProfileString("Autoplay", "Method", "Key", ControliniPath);
+                WritePrivateProfileString("Autoplay", "JoyID", NULL, ControliniPath);
+                WritePrivateProfileString("Autoplay", "Binding", _itoa(key, buff, sizeof(buff)), ControliniPath);
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndPopup();
+        //PLEASE SOMEONE REPLCE IT WITH RAWINPUT OF SOMETHING
+    }
+
+    if (binding != NULL) {
+        //Clear Binding
+        ImGui::SameLine();
+        sprintf(buttonLabel, "Clear##%d", "Autoplay" + 100);
+        if (ImGui::Button(buttonLabel)) {
+            WritePrivateProfileString("Autoplay", NULL, NULL, ControliniPath);
+        }
+    }
+
+    ImGui::Columns(1);
+    ImGui::Separator();
 
 
     //BEGIN DEV BINDING
@@ -798,56 +912,68 @@ void HelpMarker(const char* desc)
     }
 }
 
+
 int detectGameVersion() {
+    TCHAR fullPath[MAX_PATH];
+    TCHAR driveLetter[3];
+    TCHAR directory[MAX_PATH];
+    TCHAR FinalPath[MAX_PATH];
+    DIR* dir;
+    struct dirent* ent;
     unsigned char result[MD5_DIGEST_LENGTH];
-    const char* filename;
+
+    //get current directory
+    GetModuleFileName(NULL, fullPath, MAX_PATH);
+    _splitpath(fullPath, driveLetter, directory, NULL, NULL);
+    sprintf(FinalPath, "%s%s", driveLetter, directory);
 
 
-    if (fileExists("EZ2DJ.exe")) {
-        filename = "EZ2DJ.exe";
+    if ((dir = opendir(FinalPath)) != NULL) {
+        /* print all the files and directories within directory */
+        while ((ent = readdir(dir)) != NULL) {
+            
+            if (strcmp(ent->d_name, "2EZConfig.exe") == 0 || !hasEnding(toLower(ent->d_name), ".exe")) {
+                printf("Skipping %s\n", ent->d_name);
+                continue;
+            }
+            printf("Comapring %s\n", ent->d_name);
+
+            FILE* inFile = fopen(ent->d_name, "rb");
+            MD5_CTX mdContext;
+            int bytes;
+            unsigned char data[1024];
+
+
+            //cannot open file, continute to next.
+            if (inFile == NULL) {
+                continue;
+            }
+
+            //generate file MD5
+            MD5_Init(&mdContext);
+            while ((bytes = fread(data, 1, 1024, inFile)) != 0) {
+                MD5_Update(&mdContext, data, bytes);
+            }
+            MD5_Final(result, &mdContext);
+            fclose(inFile);
+
+            //COMPARE WITH KNOWN MD5's and return first match
+            for (int i = 0; i < IM_ARRAYSIZE(djGames); i++) {
+                if (memcmp(result, djGames[i].md5, MD5_DIGEST_LENGTH) == 0) {
+                    printf("MD5 Matches: %s", djGames[i].name);
+                    return i;
+                };
+            }
+            printf("No Match.. \n");
+        }
+        closedir(dir);
     }
-    else if (fileExists("EZ2AC.exe")) {
-        filename = "EZ2AC.exe";
-    }
-    else if (fileExists("EZ2Dancer.exe")) {
-        filename = "EZ2Dancer.exe";
-    }
-    else {
-        //Cant find any EXE. set to n-1
-        return IM_ARRAYSIZE(djGames) - 2;
-    }
 
-
-    int i;
-    FILE* inFile = fopen(filename, "rb");
-    MD5_CTX mdContext;
-    int bytes;
-    unsigned char data[1024];
-
-    if (inFile == NULL) {
-        //Something Broke, Set to  n-1
-        return IM_ARRAYSIZE(djGames) - 2;
-    }
-
-    MD5_Init(&mdContext);
-    while ((bytes = fread(data, 1, 1024, inFile)) != 0) {
-        MD5_Update(&mdContext, data, bytes);
-    }
-    MD5_Final(result, &mdContext);
-    fclose(inFile);
-
-
-    //COMPARE WITH KNOWN MD5's
-    for (int i = 0; i < IM_ARRAYSIZE(djGames); i++) {
-        if (memcmp(result, djGames[i].md5, MD5_DIGEST_LENGTH) == 0) {
-            return i;
-        };
-    }
-
-
-    //shouldve returned already but if nothing found set to n-1
+    // could not open directory set to n-1
     return IM_ARRAYSIZE(djGames) - 2;
 }
+
+
 
 
 
