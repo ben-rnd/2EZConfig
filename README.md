@@ -39,7 +39,7 @@ Requires the Visual studio 2015 - Windows XP(v140_XP) Platform toolset.
 
 ## Contact
 
-Please feel free to contact me on sows, or through my discord @ kissAss#0744
+Please feel free to contact me on sows (IYKYK)
 
 
 
