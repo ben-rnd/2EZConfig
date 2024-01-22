@@ -31,6 +31,7 @@ All external library files should be included and pre linked so building should 
 Requires the Visual studio 2015 - Windows XP(v140_XP) Platform toolset.
 
 ## Roadmap
+- Headless mode button mapping (no GUI for legacy systems using TNT2 GPU)
 - HID Input, support for various input device (eg.MIDI)
 - HID Lighting out
 - EZ2Dancer support - IOhooking done, just need to RE the button mappings on ports and create config interface for it (kind of done, check out the ez2dancer branch)
