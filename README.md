@@ -43,6 +43,7 @@ EZ2 was built to run on win98 (and later windows xp), so you can expect to come 
 Here are some software that can make the game look must nicer on windows 10
 - DDrawCompat (https://github.com/narzoul/DDrawCompat/releases)
 - dgVoodoo (http://dege.freeweb.hu/dgVoodoo2/dgVoodoo2/)
+  
 If i find anything else that improves compatibilty ill update this list
 
 ## Contact
