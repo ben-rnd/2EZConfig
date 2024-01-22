@@ -133,7 +133,7 @@ int EZConfig::sixthBackgroundLoop(char* launcherName) {
     //and the hook will conflict if they are both the same
     printf("lauching 6th loop\n");
     Injector::Inject(launcherName);
-    while (isProcessOpen(launcherName) ){
+    while (true){
         //both these names should never changes, the 6th trax launcher exe requires these names to function
         if (!inSixth) {
             if (Injector::InjectWithName("EZ2DJ6th.exe")) {
@@ -144,7 +144,7 @@ int EZConfig::sixthBackgroundLoop(char* launcherName) {
         }
         else {
             if (Injector::InjectWithName("Ez2DJ.exe")) {
-                Injector::InjectWithName(launcherName);
+                //Injector::InjectWithName(launcherName);
                 inSixth = false;
                 printf("Found 1st\n");
             }

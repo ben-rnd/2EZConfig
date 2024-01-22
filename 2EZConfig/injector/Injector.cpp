@@ -119,7 +119,6 @@ int Injector::Inject(char* exename) {
 }
 
 
-
 int Injector::InjectWithName(const char* exename ) {
     //this sleep stops sixth from crashing when switching to 1st
     Sleep(10);
