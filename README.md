@@ -3,7 +3,7 @@ disclaimer: This project was migrated from dev.s-ul.eu gitlab ni 2023
 
 This is a tool designed to enable USB controllers to work with all versions of EZ2DJ/AC, aswell as offering various patches and hacks to make the home experience more enjoyable. The motivation behind this tool is for the preservation of the most important gamemode of all time: EZ2Catch.
 
-The tool was initally a small personal project that was hacked together in a few nights after frustration when playing EC with joy2key, it was released due to the attention that EZ2 had been gaining with the public release of final, so i apologise in advance for some awful programming. Now that its open source please feel free to improve it! :D
+The tool was initally a small personal project that was hacked together in a few nights after frustration when playing EC with joy2key, so i apologise for the general lack of readability.
 
 ## Current Compatibility and Features
 
