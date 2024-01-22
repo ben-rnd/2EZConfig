@@ -10,7 +10,7 @@ The tool was initally a small personal project that was hacked together in a few
 All EZ2DJ/AC games support this method of IO input emulation.
 
 ### Patches 
-All Patches are applied after launching the game the game, and make no modification to original files.
+All Patches are applied in memory after launching the game, and make no modification to original files.
 #### Endless Circulation -> FNEX
 - Enable and bind deveveloper inputs.
 - Timer freeze patches
