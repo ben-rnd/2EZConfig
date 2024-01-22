@@ -1,4 +1,5 @@
 # 2EZProject
+disclaimer: This project was migrated from dev.s-ul.eu gitlab ni 2023
 
 This is a tool designed to enable USB controllers to work with all versions of EZ2DJ/AC, aswell as offering various patches and hacks to make the home experience more enjoyable. The motivation behind this tool is for the preservation of the most important gamemode of all time: EZ2Catch.
 
