@@ -112,30 +112,30 @@ int Injector::Inject(char* exename) {
 
         createRemoteThreadMethod(hProcess, llAddr, dllAddr);
         
-		char addlDlls[255];
-		GetPrivateProfileStringA("Settings", "AdditionalDLLs", NULL, addlDlls, 255, config);
-		if (addlDlls != NULL) {
-			char addlDllName[64];
-			char* pDllNameStart = addlDlls;
-			char* pDllNameEnd;
-			bool finalDll = false;
+	char addlDlls[255];
+	GetPrivateProfileStringA("Settings", "AdditionalDLLs", NULL, addlDlls, 255, config);
+	if (addlDlls != NULL) {
+		char addlDllName[64];
+		char* pDllNameStart = addlDlls;
+		char* pDllNameEnd;
+		bool finalDll = false;
 
-			do {
-				// Returns pointer to comma, or NULL if one doesn't exist
-				pDllNameEnd = strpbrk(pDllNameStart, ",");
-				if (pDllNameEnd == NULL) {
-					pDllNameEnd = pDllNameStart + strlen(pDllNameStart);
-					finalDll = true;
-				}
-				strncpy_s(addlDllName, pDllNameStart, pDllNameEnd - pDllNameStart);
+		do {
+			// Returns pointer to comma, or NULL if one doesn't exist
+			pDllNameEnd = strpbrk(pDllNameStart, ",");
+			if (pDllNameEnd == NULL) {
+				pDllNameEnd = pDllNameStart + strlen(pDllNameStart);
+				finalDll = true;
+			}
+			strncpy_s(addlDllName, pDllNameStart, pDllNameEnd - pDllNameStart);
 
-				dllAddr = virtualAlloc(hProcess, addlDllName);
-				writeProcessMemory(hProcess, dllAddr, addlDllName);
-				createRemoteThreadMethod(hProcess, llAddr, dllAddr);
-				
-				pDllNameStart = pDllNameEnd + 1;
-			} while (finalDll == false);
-		}
+			dllAddr = virtualAlloc(hProcess, addlDllName);
+			writeProcessMemory(hProcess, dllAddr, addlDllName);
+			createRemoteThreadMethod(hProcess, llAddr, dllAddr);
+			
+			pDllNameStart = pDllNameEnd + 1;
+		} while (finalDll == false);
+	}
 		
         CloseHandle(hProcess);
         return 1;
